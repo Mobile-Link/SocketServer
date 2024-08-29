@@ -4,8 +4,20 @@ namespace SocketServer.ChatHub;
 
 public class ChatHub : Hub
 {
-    public async Task SendMessage(string user, string message)
+    public override Task OnConnectedAsync()
     {
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+        var connectionId = Context.ConnectionId;
+        
+        return base.OnConnectedAsync();
+    }
+
+    public async Task SendFile(string userId, byte[] chunk)
+    {
+        await Clients.Others.SendAsync("ReceiveFileChunk", userId, chunk);
+    }
+    
+    public async Task CompleteTransfer(string userId, string fileName)
+    {
+        await Clients.Others.SendAsync("FileTransferComplete", userId, fileName);
     }
 }
