@@ -9,6 +9,7 @@ namespace SocketServer.ChatHub;
 public class ChatHub : Hub
 {
     private readonly ConnectionManagerService _connectionManagerService;
+    private readonly Dictionary<string, List<string>> _transferringFiles = new Dictionary<string, List<string>>();
     
     public ChatHub(ConnectionManagerService connectionManagerService)
     {
@@ -40,5 +41,21 @@ public class ChatHub : Hub
         _connectionManagerService.RemoveUser(connectionId);
         
         return base.OnDisconnectedAsync(exception);
+    }
+    
+    public async Task SendFile(string userId, string fileName, byte[] chunk)
+    {
+        if (!_transferringFiles.ContainsKey(userId))
+        {
+            _transferringFiles[userId] = new List<string>();
+        }
+        if (!_transferringFiles[userId].Contains(fileName))
+        {
+            _transferringFiles[userId].Add(fileName);
+        }
+            
+        await Clients.User(userId).SendAsync("ReceiveFileChunk", fileName, chunk);
+        
+        Console.WriteLine($"User {userId} enviou o arquivo {fileName}");
     }
 }
