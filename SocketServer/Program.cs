@@ -1,8 +1,9 @@
-using System.Runtime.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SocketServer.ChatHub;
+using SocketServer.Data;
 using SocketServer.FileTransferHub;
 using SocketServer.Services;
 
@@ -35,6 +36,9 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 });
+
+builder.Services.AddDbContext<AppDbContext>(options => 
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 

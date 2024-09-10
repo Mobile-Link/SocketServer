@@ -1,17 +1,15 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SocketServer.Data;
 using SocketServer.Models;
 
 namespace SocketServer.Services;
 
-public class UserService()
+public class UserService(AppDbContext context)
 {
-    private List<User> _users = new List<User>();
-    private int _nextId = 1;
-
-    public IActionResult Register(RegisterRequest request)
+    public async Task<IActionResult> Register(Register request)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
         {
@@ -23,28 +21,99 @@ public class UserService()
             return new BadRequestObjectResult(new {error = "Formato de email inválido"});
         }
         
-        var existingUser = _users.FirstOrDefault(u => u.Email == request.Email);
+        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         
         if (existingUser != null)
         {
             return new BadRequestObjectResult(new {error = "Email já cadastrado"});
         }
-        
+
         var user = new User
         {
-            Id = _nextId++,
             Email = request.Email,
-            PasswordHash = request.Password
+            Username = request.Username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            CreationDate = DateTime.Now
         };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
 
-        _users.Add(user);
-
-        //TODO Normalizar saída da service
         return new OkObjectResult(user);
     }
-    
-    public List<User> GetUsers()
+
+    public async Task<IActionResult> DeleteUser(int IdUser)
     {
-        return _users.Skip(Math.Max(0, _users.Count - 10)).ToList();
+        var user = await context.Users.FindAsync(IdUser);
+        
+        if (user == null)
+        {
+            return new NotFoundObjectResult(new {error = "Usuário não encontrado"});
+        }
+        
+        context.Users.Remove(user);
+        await context.SaveChangesAsync();
+        
+        return new OkObjectResult(new {message = "Usuário removido com sucesso"});
+    }
+    
+    public async Task<IActionResult> UpdateUser(int IdUser, UpdateUser request)
+    {
+        var user = await context.Users.FindAsync(IdUser);
+        
+        if (user == null)
+        {
+            return null;
+        }
+        
+        if(!string.IsNullOrEmpty(request.Username))
+        {
+            user.Username = request.Username;
+        }
+
+        if (!string.IsNullOrEmpty(request.Email))
+        {
+            user.Email = request.Email;
+        }
+
+        context.Users.Update(user);
+        await context.SaveChangesAsync();
+        
+        return new OkObjectResult(new { message = "Usuário atualizado com sucesso" });
+    }
+    
+    public async Task<IActionResult> UpdatePassword(int IdUser, UpdatePassword request)
+    {
+        var user = await context.Users.FindAsync(IdUser);
+        
+        if (user == null)
+        {
+            return new NotFoundObjectResult(new {error = "Usuário não encontrado"});
+        }
+        
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        
+        context.Users.Update(user);
+        await context.SaveChangesAsync();
+        
+        return new OkObjectResult(new {message = "Senha atualizada com sucesso"});
+    }
+    
+    public async Task<List<User>> GetUsers()
+    {
+        return await context.Users.ToListAsync();
+    }
+    
+    public async Task<User> GetUserByEmail(string email)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        
+        return user;
+    }
+    
+    public async Task<User> GetUserByUsername(string username)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        
+        return user;
     }
 }

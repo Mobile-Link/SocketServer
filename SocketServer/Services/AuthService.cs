@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -6,17 +7,39 @@ using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegiste
 
 namespace SocketServer.Services;
 
-public class AuthService(IConfiguration configuration)
+public class AuthService(IConfiguration configuration, UserService userService)
 {
+    private readonly UserService _userService = userService;
     private readonly IConfiguration _configuration = configuration;
 
-    public bool ValidateCredentials(string user, string password)
+    public async Task<bool> ValidateCredentials(string emailOrUsername ,string password)
     {
-        if (user == "usuário" && password == "senha")
+        if (new EmailAddressAttribute().IsValid(emailOrUsername))
         {
-            return true;
-        }
+            var user = await _userService.GetUserByEmail(emailOrUsername);
+            if (user == null)
+            {
+                return false;
+            }
 
+            if (BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            {
+                return true;
+            }
+        } else 
+        {
+            var user = await _userService.GetUserByUsername(emailOrUsername);
+            if (user == null)
+            {
+                return false;
+            }
+
+            if (BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+            {
+                return true;
+            }
+        }
+        
         return false;
     }
 

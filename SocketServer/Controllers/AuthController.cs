@@ -10,46 +10,36 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 
-public class AuthController : ControllerBase
+public class AuthController(AuthService authService, UserService userService) : ControllerBase
 {
-    private readonly AuthService _authService;
-    private readonly UserService _userService;
-    
-    public AuthController(AuthService authService, UserService userService)
-    {
-        _authService = authService;
-        _userService = userService;
-    }
-
     [HttpPost("login")]
-    public IActionResult Login(string email, string password)
+    public async Task<IActionResult> Login(Login request)
     {
-        if(_authService.ValidateCredentials(email, password))
+        if (await authService.ValidateCredentials(request.EmailOrUsername, request.Password))
         {
-            var token = _authService.GenerateJwtToken(email);
-            
+            var token = authService.GenerateJwtToken(request.EmailOrUsername);
             return Ok(new { token });
         }
         else
         {
-            return Unauthorized("Credenciais inválidas");
+            return Unauthorized(new { error = "Credenciais inválidas" });
         }
-    }  
+    }
     
     [HttpPost("register")]
-    public IActionResult Register(RegisterRequest request)
+    public async Task<IActionResult> Register(Register request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
         
-        var result = _userService.Register(request);
+        var result = await userService.Register(request);
         
         if (result is OkObjectResult)
         {
             var user = (result as OkObjectResult).Value as User;
-            var token = _authService.GenerateJwtToken(user.Email);
+            var token = authService.GenerateJwtToken(user.Email);
             return Ok(new {token});
         }
         else
@@ -59,9 +49,30 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("user")]
-    public IActionResult GetUser()
+    public async Task<IActionResult> GetUser()
     {
-        var users = _userService.GetUsers();
+        var users = await userService.GetUsers();
         return Ok(users);
+    }
+    
+    [HttpDelete("user/{IdUser}")]
+    public async Task<IActionResult> DeleteUser(int IdUser)
+    {
+        var result = await userService.DeleteUser(IdUser);
+        return result;
+    }
+    
+    [HttpPut("user/{IdUser}")]
+    public async Task<IActionResult> UpdateUser(int IdUser, UpdateUser request)
+    {
+        var result = await userService.UpdateUser(IdUser, request);
+        return result;
+    }
+    
+    [HttpPut ("user/{IdUser}/password")]
+    public async Task<IActionResult> UpdatePassword(int IdUser, UpdatePassword request)
+    {
+        var result = await userService.UpdatePassword(IdUser, request);
+        return result;
     }
 }
