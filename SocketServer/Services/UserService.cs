@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Xml.Schema;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -33,7 +34,8 @@ public class UserService(AppDbContext context)
             Email = request.Email,
             Username = request.Username,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-            CreationDate = DateTime.Now
+            CreationDate = DateTime.Now,
+            IsActive = true
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -115,5 +117,50 @@ public class UserService(AppDbContext context)
         var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
         
         return user;
+    }
+    
+    public async Task ActivateUser(string email)
+    {
+        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        
+        if (user != null)
+        {
+            user.IsActive = true;
+            await context.SaveChangesAsync();
+        }
+    }
+    
+    public async Task StoreVerificationCode(string email, string code)
+    {
+        var verificationCode = new VerificationCode
+        {
+            Email = email,
+            Code = code,
+            CreationDate = DateTime.Now
+        };
+        
+        context.VerificationCodes.Add(verificationCode);
+        await context.SaveChangesAsync();
+    }
+    
+    public async Task<string> GetVerificationCode(string email)
+    {
+        var verificationCode = await context.VerificationCodes.FirstOrDefaultAsync(vc => vc.Email == email);
+        if (verificationCode != null)
+        {
+            return verificationCode.Code;
+        }
+
+        return null;
+    }
+    
+    public async Task DeleteVerificationCode(string email)
+    {
+        var verificationCode = await context.VerificationCodes.FirstOrDefaultAsync(vc => vc.Email == email);
+        if (verificationCode != null)
+        {
+            context.VerificationCodes.Remove(verificationCode);
+            await context.SaveChangesAsync();
+        }
     }
 }

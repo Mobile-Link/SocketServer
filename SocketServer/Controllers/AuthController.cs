@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Models;
 using SocketServer.Services;
@@ -10,7 +7,7 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 
-public class AuthController(AuthService authService, UserService userService) : ControllerBase
+public class AuthController(AuthService authService, UserService userService, EmailService emailService, CodeGeneratorService codeGeneratorService) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<IActionResult> Login(Login request)
@@ -33,18 +30,40 @@ public class AuthController(AuthService authService, UserService userService) : 
         {
             return BadRequest(ModelState);
         }
+
+        var verificationCode = codeGeneratorService.GenerateVerificationCode();
         
-        var result = await userService.Register(request);
+        await userService.StoreVerificationCode(request.Email, verificationCode);
         
-        if (result is OkObjectResult)
+        await emailService.SendVerificationEmailAsync(request.Email, verificationCode);
+
+        return Ok(new { message = "Verifique seu email para ativar sa conta" });
+    }
+
+    [HttpPost("verifyCode")]
+    public async Task<IActionResult> VerifyCode(string email, string code, Register request)
+    {
+        var storedCode = await userService.GetVerificationCode(email);
+        
+        if (storedCode == null || storedCode != code)
         {
-            var user = (result as OkObjectResult).Value as User;
-            var token = authService.GenerateJwtToken(user.Email);
-            return Ok(new {token});
+            return BadRequest(new { error = "Código inválido" });
+        }
+        
+        var registerResult = await userService.Register(request);
+        
+        await userService.ActivateUser(email);
+        
+        if (registerResult is OkObjectResult)
+        {
+            await userService.DeleteVerificationCode(email);
+            var user = (registerResult as OkObjectResult).Value as User;
+            var token = authService.GenerateJwtToken(email);
+            return Ok(new { token });
         }
         else
         {
-            return BadRequest(result);
+            return BadRequest(registerResult);
         }
     }
 

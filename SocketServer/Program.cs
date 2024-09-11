@@ -16,6 +16,12 @@ builder.Services.AddScoped<ConnectionManagerService>(sp =>
     new ConnectionManagerService(sp.GetRequiredService<IHubContext<FileTransferHub>>()));
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<EmailService>(sp => new EmailService(
+    builder.Configuration["MailgunApiKey"],
+    builder.Configuration["MailgunDomain"]
+    ));
+builder.Services.AddScoped<CodeGeneratorService>();
+builder.Services.AddScoped<CodeExpirationService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();

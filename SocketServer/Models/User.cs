@@ -10,4 +10,6 @@ public class User
     public string Username { get; set; }
     public string PasswordHash { get; set; }
     public DateTime CreationDate { get; set; }
+    public bool IsActive { get; set; }
+    public string VerificationCode { get; set; }
 }
