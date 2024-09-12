@@ -17,19 +17,26 @@ public class EmailService
     }
     public async Task SendVerificationEmailAsync(string email, string verificationCode)
     {
-        var client = new RestClient($"https://api.mailgun.net/v3/{_domain}/messages");
-        var request = new RestRequest()
-        {
-            Method = Method.Get
-        };
+        var client = new RestClient($"https://api.mailgun.net/v3");
         
-        request.AddHeader("Authorization", $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes($"api:{_apiKey}"))}");
+        var authHeader = Convert.ToBase64String(Encoding.UTF8.GetBytes($"api:{_apiKey}"));
+        Console.WriteLine($"API Key codificada: {authHeader}");
+        client.AddDefaultHeader("Authorization", $"Basic {authHeader}");
+        
+        var request = new RestRequest();
+        
+        request.AddParameter("domain", _domain, ParameterType.UrlSegment);
+        request.Resource = "{domain}/messages";
         request.AddParameter("from", $"Mobilelink <mobilelink2025@gmail.com>");
         request.AddParameter("to", email);
         request.AddParameter("subject", "Código de verificação");
         request.AddParameter("text", $"Seu código de verificação é: {verificationCode}");
+        request.Method = Method.Post;
         
         var response = await client.ExecuteAsync(request);
+        
+        Console.WriteLine(response.Content);
+        Console.WriteLine(response.StatusCode);
 
         if (response.StatusCode != HttpStatusCode.OK)
         {
