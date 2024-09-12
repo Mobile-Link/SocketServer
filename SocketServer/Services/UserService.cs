@@ -136,7 +136,8 @@ public class UserService(AppDbContext context)
         {
             Email = email,
             Code = code,
-            CreationDate = DateTime.Now
+            CreationDate = DateTime.Now,
+            ExpirationDate = DateTime.Now.AddMinutes(1)
         };
         
         context.VerificationCodes.Add(verificationCode);
@@ -146,7 +147,7 @@ public class UserService(AppDbContext context)
     public async Task<string> GetVerificationCode(string email)
     {
         var verificationCode = await context.VerificationCodes.FirstOrDefaultAsync(vc => vc.Email == email);
-        if (verificationCode != null)
+        if (verificationCode != null && verificationCode.ExpirationDate >= DateTime.Now)
         {
             return verificationCode.Code;
         }

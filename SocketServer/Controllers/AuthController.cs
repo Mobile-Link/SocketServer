@@ -37,7 +37,7 @@ public class AuthController(AuthService authService, UserService userService, Em
         
         await emailService.SendVerificationEmailAsync(request.Email, verificationCode);
 
-        return Ok(new { message = "Verifique seu email para ativar sa conta" });
+        return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
 
     [HttpPost("verifyCode")]
@@ -47,7 +47,7 @@ public class AuthController(AuthService authService, UserService userService, Em
         
         if (storedCode == null || storedCode != code)
         {
-            return BadRequest(new { error = "Código inválido" });
+            return BadRequest(new { error = "Código inválido ou expirado" });
         }
         
         var registerResult = await userService.Register(request);
@@ -75,23 +75,23 @@ public class AuthController(AuthService authService, UserService userService, Em
     }
     
     [HttpDelete("user/{IdUser}")]
-    public async Task<IActionResult> DeleteUser(int IdUser)
+    public async Task<IActionResult> DeleteUser(int idUser)
     {
-        var result = await userService.DeleteUser(IdUser);
+        var result = await userService.DeleteUser(idUser);
         return result;
     }
     
     [HttpPut("user/{IdUser}")]
-    public async Task<IActionResult> UpdateUser(int IdUser, UpdateUser request)
+    public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
     {
-        var result = await userService.UpdateUser(IdUser, request);
+        var result = await userService.UpdateUser(idUser, request);
         return result;
     }
     
     [HttpPut ("user/{IdUser}/password")]
-    public async Task<IActionResult> UpdatePassword(int IdUser, UpdatePassword request)
+    public async Task<IActionResult> UpdatePassword(int idUser, UpdatePassword request)
     {
-        var result = await userService.UpdatePassword(IdUser, request);
+        var result = await userService.UpdatePassword(idUser, request);
         return result;
     }
 }

@@ -15,8 +15,6 @@ public class CodeExpirationService
         _logger = logger;
         _context = context;
         _userService = userService;
-        
-        _timer = new Timer(DeleteExpiredCodes, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
     }
     
     public Task StartAsync(CancellationToken stoppingToken)
@@ -41,7 +39,7 @@ public class CodeExpirationService
     {
         _logger.LogInformation("CodeExpirationService is deleting expired codes.");
         
-        var verificationCodes = await _context.VerificationCodes.Where(v => v.CreationDate < DateTime.Now.AddMinutes(-1)).ToListAsync();
+        var verificationCodes = await _context.VerificationCodes.Where(v => v.ExpirationDate < DateTime.Now).ToListAsync();
 
         foreach (var verificationCode in verificationCodes)
         {
