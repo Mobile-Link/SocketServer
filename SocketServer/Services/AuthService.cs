@@ -65,5 +65,7 @@ public class AuthService(IConfiguration configuration, UserService userService)
     
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
         return tokenString;
+        
+        //TODO - Validar renovação de token
     }
 }

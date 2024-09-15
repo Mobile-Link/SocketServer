@@ -10,6 +10,7 @@ namespace SocketServer.Services;
 
 public class UserService(AppDbContext context)
 {
+    
     public async Task<IActionResult> Register(Register request)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -21,6 +22,8 @@ public class UserService(AppDbContext context)
         {
             return new BadRequestObjectResult(new {error = "Formato de email inválido"});
         }
+        
+        //TODO - Fazer um dicionário de erros
         
         var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         

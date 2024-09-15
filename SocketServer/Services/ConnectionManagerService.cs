@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Generic;
+using SocketServer.ChatHub;
 
 namespace SocketServer.Services;
 
 public class ConnectionManagerService
 {
     private readonly Dictionary<string, string> _activeConnections = new Dictionary<string, string>();
-    private readonly IHubContext<FileTransferHub.FileTransferHub> _hubContext;
+    private readonly IHubContext<TransferHub> _hubContext;
     
-    public ConnectionManagerService(IHubContext<FileTransferHub.FileTransferHub> hubContext)
+    public ConnectionManagerService(IHubContext<TransferHub> hubContext)
     {
         _hubContext = hubContext;
     }
@@ -36,5 +37,15 @@ public class ConnectionManagerService
     public string GetConnectionId(string connectionId)
     {
         return connectionId;
+    }
+    
+    public bool IsUserConnected(string connectionId)
+    {
+        return _activeConnections.ContainsKey(connectionId);
+    }
+    
+    public Dictionary<string, string> GetActiveConnections()
+    {
+        return _activeConnections;
     }
 }

@@ -4,18 +4,45 @@ using System.Threading.Tasks;
 using System.IO;
 using SocketServer.Services;
 
-namespace SocketServer.FileTransferHub;
+namespace SocketServer.ChatHub;
 
-public class FileTransferHub : Hub
+public class TransferHub : Hub
 {
-    private readonly Dictionary<string, List<string>> _transferringFiles = new Dictionary<string, List<string>>();
-    private readonly FileTransferService _fileTransferService;
     private readonly ConnectionManagerService _connectionManagerService;
-        
-    public FileTransferHub(FileTransferService fileTransferService, ConnectionManagerService connectionManagerService)
+    private readonly FileTransferService _fileTransferService;
+    private readonly Dictionary<string, List<string>> _transferringFiles = new Dictionary<string, List<string>>();
+    
+    public TransferHub(ConnectionManagerService connectionManagerService, FileTransferService fileTransferService)
     {
         _fileTransferService = fileTransferService;
         _connectionManagerService = connectionManagerService;
+    }
+    
+    public async Task SendMessage(string user, string message)
+    {
+        await Clients.All.SendAsync("ReceiveMessage", user, message);
+
+        Console.WriteLine($"User {user} enviou a mensagem: {message}");
+    }
+    
+    public override Task OnConnectedAsync()
+    {
+        var connectionId = Context.ConnectionId;
+        
+        Console.WriteLine($"User {connectionId} conectado");
+        _connectionManagerService.AddUsers(connectionId);
+        
+        return base.OnConnectedAsync();
+    }
+    
+    public override Task OnDisconnectedAsync(Exception? exception)
+    {
+        var connectionId = Context.ConnectionId;
+        
+        Console.WriteLine($"User {connectionId} desconectado");
+        _connectionManagerService.RemoveUser(connectionId);
+        
+        return base.OnDisconnectedAsync(exception);
     }
     
     public async Task SendFile(string userId, string fileName, byte[] chunk)
@@ -30,8 +57,10 @@ public class FileTransferHub : Hub
         }
             
         await Clients.User(userId).SendAsync("ReceiveFileChunk", fileName, chunk);
-    }
         
+        Console.WriteLine($"User {userId} enviou o arquivo {fileName}");
+    }
+    
     public async Task CompleteTransfer(string userId, string fileName, long fileSize)
     {
         if(_transferringFiles.ContainsKey(userId) && _transferringFiles[userId].Contains(fileName))
@@ -48,7 +77,7 @@ public class FileTransferHub : Hub
     {
         await Clients.User(userId).SendAsync("StartFileTransfer", fileName, fileSize);
     }
-        
+    
     public async Task ReceiveFile(string connectionId,string fileName, byte[] chunk)
     {
         await _fileTransferService.ReceiveFile(fileName, chunk);

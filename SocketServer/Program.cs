@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SocketServer.ChatHub;
 using SocketServer.Data;
-using SocketServer.FileTransferHub;
 using SocketServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +12,7 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<FileTransferService>();
 builder.Services.AddScoped<ConnectionManagerService>();
 builder.Services.AddScoped<ConnectionManagerService>(sp =>
-    new ConnectionManagerService(sp.GetRequiredService<IHubContext<FileTransferHub>>()));
+    new ConnectionManagerService(sp.GetRequiredService<IHubContext<TransferHub>>()));
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
@@ -59,8 +58,7 @@ app.UseReDoc(c =>
     c.SpecUrl = "/swagger/v1/swagger.json";
 });
 
-app.MapHub<FileTransferHub>("/filetransferhub");
-app.MapHub<ChatHub>("/chathub");
+app.MapHub<TransferHub>("/transferhub");
 
 app.MapControllers();
 
