@@ -10,7 +10,6 @@ namespace SocketServer.Services;
 
 public class UserService(AppDbContext context)
 {
-    
     public async Task<IActionResult> Register(Register request)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -38,7 +37,6 @@ public class UserService(AppDbContext context)
             Username = request.Username,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             CreationDate = DateTime.Now,
-            IsActive = true
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
@@ -128,7 +126,6 @@ public class UserService(AppDbContext context)
         
         if (user != null)
         {
-            user.IsActive = true;
             await context.SaveChangesAsync();
         }
     }

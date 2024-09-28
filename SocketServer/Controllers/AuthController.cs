@@ -66,32 +66,4 @@ public class AuthController(AuthService authService, UserService userService, Em
             return BadRequest(registerResult);
         }
     }
-
-    [HttpGet("user")]
-    public async Task<IActionResult> GetUser()
-    {
-        var users = await userService.GetUsers();
-        return Ok(users);
-    }
-    
-    [HttpDelete("user/{IdUser}")]
-    public async Task<IActionResult> DeleteUser(int idUser)
-    {
-        var result = await userService.DeleteUser(idUser);
-        return result;
-    }
-    
-    [HttpPut("user/{IdUser}")]
-    public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
-    {
-        var result = await userService.UpdateUser(idUser, request);
-        return result;
-    }
-    
-    [HttpPut ("user/{IdUser}/password")]
-    public async Task<IActionResult> UpdatePassword(int idUser, UpdatePassword request)
-    {
-        var result = await userService.UpdatePassword(idUser, request);
-        return result;
-    }
 }
