@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Models;
+using SocketServer.Entities;
 
 namespace SocketServer.Services;
 

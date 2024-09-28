@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace SocketServer.Models;
+namespace SocketServer.Entities;
 
 public class VerificationCode
 {

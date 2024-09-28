@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SocketServer.Models;
+using SocketServer.Entities;
 
 namespace SocketServer.Data;
 

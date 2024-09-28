@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using SocketServer.Entities;
 using SocketServer.Models;
 using SocketServer.Services;
 
