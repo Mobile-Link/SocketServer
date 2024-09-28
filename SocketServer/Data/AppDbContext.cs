@@ -11,12 +11,7 @@ public class AppDbContext : DbContext
     
     public DbSet<User> Users { get; set; }
     public DbSet<VerificationCode> VerificationCodes { get; set; }
-    
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlite("Data Source=authUsers.db");
-        }
-    }
+    public DbSet<Device> Devices { get; set; }
+    public DbSet<Storage> Storages { get; set; }
+    public DbSet<Transference> Transfers { get; set; }
 }
