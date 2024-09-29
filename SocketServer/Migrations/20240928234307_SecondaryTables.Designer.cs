@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,40 +11,14 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240928234307_SecondaryTables")]
+    partial class SecondaryTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
-
-            modelBuilder.Entity("SocketServer.Entities.AccessLog", b =>
-                {
-                    b.Property<int>("idAccessLog")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AccessLocation")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("idDevice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("idUser")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("idAccessLog");
-
-                    b.HasIndex("idDevice");
-
-                    b.HasIndex("idUser");
-
-                    b.ToTable("AccessLogs");
-                });
 
             modelBuilder.Entity("SocketServer.Entities.Device", b =>
                 {
@@ -93,21 +68,6 @@ namespace SocketServer.Migrations
                     b.ToTable("Devices");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.EnAction", b =>
-                {
-                    b.Property<int>("idAction")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("idAction");
-
-                    b.ToTable("EnActions");
-                });
-
             modelBuilder.Entity("SocketServer.Entities.EnDeviceOS", b =>
                 {
                     b.Property<int>("idDeviceOS")
@@ -120,48 +80,7 @@ namespace SocketServer.Migrations
 
                     b.HasKey("idDeviceOS");
 
-                    b.ToTable("EnDeviceOSs");
-                });
-
-            modelBuilder.Entity("SocketServer.Entities.EnStatus", b =>
-                {
-                    b.Property<int>("idStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("idStatus");
-
-                    b.ToTable("EnStatuses");
-                });
-
-            modelBuilder.Entity("SocketServer.Entities.History", b =>
-                {
-                    b.Property<int>("idHistory")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("enAction")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("idDevice")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("idUser")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("idHistory");
-
-                    b.HasIndex("enAction");
-
-                    b.HasIndex("idDevice");
-
-                    b.HasIndex("idUser");
-
-                    b.ToTable("History");
+                    b.ToTable("EnDeviceOS");
                 });
 
             modelBuilder.Entity("SocketServer.Entities.Storage", b =>
@@ -227,27 +146,6 @@ namespace SocketServer.Migrations
                     b.ToTable("Transfers");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.TransferenceLog", b =>
-                {
-                    b.Property<int>("idTransferenceLog")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("enStatus")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("idTransference")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("idTransferenceLog");
-
-                    b.HasIndex("enStatus");
-
-                    b.HasIndex("idTransference");
-
-                    b.ToTable("TransferenceLogs");
-                });
-
             modelBuilder.Entity("SocketServer.Entities.User", b =>
                 {
                     b.Property<int>("IdUser")
@@ -299,25 +197,6 @@ namespace SocketServer.Migrations
                     b.ToTable("VerificationCodes");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.AccessLog", b =>
-                {
-                    b.HasOne("SocketServer.Entities.Device", "Device")
-                        .WithMany()
-                        .HasForeignKey("idDevice")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SocketServer.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("idUser")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Device");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("SocketServer.Entities.Device", b =>
                 {
                     b.HasOne("SocketServer.Entities.EnDeviceOS", "EnDeviceOs")
@@ -333,33 +212,6 @@ namespace SocketServer.Migrations
                         .IsRequired();
 
                     b.Navigation("EnDeviceOs");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SocketServer.Entities.History", b =>
-                {
-                    b.HasOne("SocketServer.Entities.EnAction", "EnAction")
-                        .WithMany()
-                        .HasForeignKey("enAction")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SocketServer.Entities.Device", "Device")
-                        .WithMany()
-                        .HasForeignKey("idDevice")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SocketServer.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("idUser")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Device");
-
-                    b.Navigation("EnAction");
 
                     b.Navigation("User");
                 });
@@ -400,25 +252,6 @@ namespace SocketServer.Migrations
                     b.Navigation("DeviceOrigin");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("SocketServer.Entities.TransferenceLog", b =>
-                {
-                    b.HasOne("SocketServer.Entities.EnStatus", "EnStatus")
-                        .WithMany()
-                        .HasForeignKey("enStatus")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SocketServer.Entities.Transference", "Transference")
-                        .WithMany()
-                        .HasForeignKey("idTransference")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EnStatus");
-
-                    b.Navigation("Transference");
                 });
 #pragma warning restore 612, 618
         }

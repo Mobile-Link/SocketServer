@@ -14,4 +14,10 @@ public class AppDbContext : DbContext
     public DbSet<Device> Devices { get; set; }
     public DbSet<Storage> Storages { get; set; }
     public DbSet<Transference> Transfers { get; set; }
+    public DbSet<AccessLog> AccessLogs { get; set; }
+    public DbSet<EnAction> EnActions { get; set; }
+    public DbSet<EnDeviceOS> EnDeviceOSs { get; set; }
+    public DbSet<EnStatus> EnStatuses { get; set; }
+    public DbSet<History> History { get; set; }
+    public DbSet<TransferenceLog> TransferenceLogs { get; set; }
 }
