@@ -1,15 +1,13 @@
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Generic;
-using SocketServer.ChatHub;
 
 namespace SocketServer.Services;
 
 public class ConnectionManagerService
 {
     private readonly Dictionary<string, string> _activeConnections = new Dictionary<string, string>();
-    private readonly IHubContext<TransferHub> _hubContext;
+    private readonly IHubContext<TransferHub.TransferHub> _hubContext;
     
-    public ConnectionManagerService(IHubContext<TransferHub> hubContext)
+    public ConnectionManagerService(IHubContext<TransferHub.TransferHub> hubContext)
     {
         _hubContext = hubContext;
     }

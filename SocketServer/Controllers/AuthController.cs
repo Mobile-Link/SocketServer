@@ -53,8 +53,6 @@ public class AuthController(AuthService authService, UserService userService, Em
         
         var registerResult = await userService.Register(request);
         
-        await userService.ActivateUser(email);
-        
         if (registerResult is OkObjectResult)
         {
             await userService.DeleteVerificationCode(email);

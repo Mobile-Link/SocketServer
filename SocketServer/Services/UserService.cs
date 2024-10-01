@@ -1,35 +1,42 @@
 using System.ComponentModel.DataAnnotations;
-using System.Xml.Schema;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SocketServer.Data;
 using SocketServer.Models;
 using SocketServer.Entities;
+using SocketServer.Interfaces;
 
 namespace SocketServer.Services;
 
-public class UserService(AppDbContext context)
+public class UserService(IAppDbContext context)
 {
     public async Task<IActionResult> Register(Register request)
     {
-        if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+        if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Username))
         {
-            return new BadRequestObjectResult( new{ error = "Email e senha são obrigatórios" });
+            return new BadRequestObjectResult( new Dictionary<string, string>
+            {
+                { "error", "Campos são obrigatórios" }
+            });
         }
 
         if (!new EmailAddressAttribute().IsValid(request.Email))
         {
-            return new BadRequestObjectResult(new {error = "Formato de email inválido"});
+            return new BadRequestObjectResult(new Dictionary<string, string>
+            {
+                { "error" , "Formato de email inválido" }
+            });
         }
         
         //TODO - Fazer um dicionário de erros
         
-        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email || u.Username == request.Username);
         
         if (existingUser != null)
         {
-            return new BadRequestObjectResult(new {error = "Email já cadastrado"});
+            return new BadRequestObjectResult(new Dictionary<string, string>
+            {
+                { "error", "Email ou Username já cadastrado" }
+            });
         }
 
         var user = new User
@@ -51,13 +58,19 @@ public class UserService(AppDbContext context)
         
         if (user == null)
         {
-            return new NotFoundObjectResult(new {error = "Usuário não encontrado"});
+            return new NotFoundObjectResult(new Dictionary<string, string>
+            {
+                { "error", "Usuário não encontrado" }
+            });
         }
         
         context.Users.Remove(user);
         await context.SaveChangesAsync();
         
-        return new OkObjectResult(new {message = "Usuário removido com sucesso"});
+        return new OkObjectResult(new Dictionary<string, string>
+        {
+            { "message", "Usuário removido com sucesso" }
+        });
     }
     
     public async Task<IActionResult> UpdateUser(int IdUser, UpdateUser request)
@@ -82,7 +95,10 @@ public class UserService(AppDbContext context)
         context.Users.Update(user);
         await context.SaveChangesAsync();
         
-        return new OkObjectResult(new { message = "Usuário atualizado com sucesso" });
+        return new OkObjectResult(new Dictionary<string, string>
+        {
+            { "message", "Usuário atualizado com sucesso" }
+        });
     }
     
     public async Task<IActionResult> UpdatePassword(int IdUser, UpdatePassword request)
@@ -91,7 +107,10 @@ public class UserService(AppDbContext context)
         
         if (user == null)
         {
-            return new NotFoundObjectResult(new {error = "Usuário não encontrado"});
+            return new NotFoundObjectResult(new Dictionary<string, string>
+            {
+                { "error", "Usuário não encontrado" }
+            });
         }
         
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -99,7 +118,10 @@ public class UserService(AppDbContext context)
         context.Users.Update(user);
         await context.SaveChangesAsync();
         
-        return new OkObjectResult(new {message = "Senha atualizada com sucesso"});
+        return new OkObjectResult(new Dictionary<string, string>
+        {
+            { "message", "Senha atualizada com sucesso" }
+        });
     }
     
     public async Task<List<User>> GetUsers()
@@ -119,16 +141,6 @@ public class UserService(AppDbContext context)
         var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
         
         return user;
-    }
-    
-    public async Task ActivateUser(string email)
-    {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        
-        if (user != null)
-        {
-            await context.SaveChangesAsync();
-        }
     }
     
     public async Task StoreVerificationCode(string email, string code)

@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using SocketServer.ChatHub;
 using SocketServer.Data;
 using SocketServer.Services;
+using SocketServer.TransferHub;
 
 var builder = WebApplication.CreateBuilder(args);
 

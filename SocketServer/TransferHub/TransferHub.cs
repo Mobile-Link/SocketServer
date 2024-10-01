@@ -1,10 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.IO;
 using SocketServer.Services;
 
-namespace SocketServer.ChatHub;
+namespace SocketServer.TransferHub;
 
 public class TransferHub : Hub
 {

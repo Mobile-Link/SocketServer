@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SocketServer.Models;
 using SocketServer.Services;
-using SocketServer.ChatHub;
 
 namespace SocketServer.Controllers;
 
@@ -12,7 +11,7 @@ namespace SocketServer.Controllers;
 
 public class ConnectionController(
     ConnectionManagerService connectionManagerService,
-    IHubContext<TransferHub> hubContext) : ControllerBase
+    IHubContext<TransferHub.TransferHub> hubContext) : ControllerBase
 {
     [HttpGet("connections")]
     public IActionResult GetConnections()
