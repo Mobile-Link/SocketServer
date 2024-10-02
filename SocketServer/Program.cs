@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using SocketServer.Data;
+using SocketServer.Interfaces;
 using SocketServer.Services;
 using SocketServer.TransferHub;
 
@@ -21,6 +22,7 @@ builder.Services.AddScoped<EmailService>(sp => new EmailService(
     ));
 builder.Services.AddScoped<CodeGeneratorService>();
 builder.Services.AddScoped<CodeExpirationService>();
+builder.Services.AddScoped<IAppDbContext, AppDbContext>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -37,10 +39,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => 
         builder.Configuration.Bind("JwtSettings", options));
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));

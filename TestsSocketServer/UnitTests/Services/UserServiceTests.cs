@@ -1,3 +1,4 @@
+using AutoFixture;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
@@ -12,6 +13,7 @@ public class UserServiceTests
 {
     private UserService _userService;
     private AppDbContext _context;
+    //TODO private Fixture _fixture;
     private async Task<User> CreateUser(string email, string username, string password)
     {
         var user = new User
@@ -27,7 +29,7 @@ public class UserServiceTests
         return user;
     }
 
-    private void AssertBadRequestResult(IActionResult result, string errorMessage)
+    private static void AssertBadRequestResult(IActionResult result, string errorMessage)
     {
         Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
         var badRequestResult = result as BadRequestObjectResult;
@@ -36,7 +38,7 @@ public class UserServiceTests
         Assert.That(((Dictionary<string, string>)badRequestResult.Value)["error"], Is.EqualTo(errorMessage));
     }
 
-    private void AssertNotFoundResult(IActionResult result, string errorMessage)
+    private static void AssertNotFoundResult(IActionResult result, string errorMessage)
     {
         Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
         var notFoundResult = result as NotFoundObjectResult;
@@ -45,7 +47,7 @@ public class UserServiceTests
         Assert.That(((Dictionary<string, string>)notFoundResult.Value)["error"], Is.EqualTo(errorMessage));
     }
 
-    private void AssertOkObjectResult(IActionResult result, string successMessage)
+    private static void AssertOkObjectResult(IActionResult result, string successMessage)
     {
         Assert.That(result, Is.InstanceOf<OkObjectResult>());
         var okResult = result as OkObjectResult;
@@ -54,7 +56,7 @@ public class UserServiceTests
         Assert.That(message["message"], Is.EqualTo(successMessage));
     }
 
-    private void AssertUser(User result, string email, string username)
+    private static void AssertUser(User result, string email, string username)
     {
         Assert.That(result, Is.Not.Null);
         Assert.Multiple(() =>
@@ -78,13 +80,13 @@ public class UserServiceTests
         {
             Assert.That(createdUser.Email, Is.EqualTo(expectedUser.Email));
             Assert.That(createdUser.Username, Is.EqualTo(expectedUser.Username));
-            Assert.That(BCrypt.Net.BCrypt.Verify(expectedUser.PasswordHash, createdUser.PasswordHash), Is.True); 
+            Assert.That(BCrypt.Net.BCrypt.Verify(request.Password, createdUser.PasswordHash), Is.True); 
         });
 
         Assert.That(await _context.Users.CountAsync(), Is.EqualTo(1));
     }
 
-    private Register CreateRegisterRequest(string email, string username, string password)
+    private static Register CreateRegister(string email, string username, string password)
     {
         return new Register
         {
@@ -93,7 +95,7 @@ public class UserServiceTests
             Password = password
         };
     }
-    private UpdateUser CreateUpdateUserRequest(string username = null, string email = null)
+    private static UpdateUser CreateUpdateUser(string username, string email)
     {
         return new UpdateUser
         {
@@ -101,7 +103,7 @@ public class UserServiceTests
             Email = email
         };
     }
-    private UpdatePassword CreateUpdatePasswordRequest(string password)
+    private static UpdatePassword CreateUpdatePassword(string password)
     {
         return new UpdatePassword
         {
@@ -115,6 +117,8 @@ public class UserServiceTests
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite("Data Source=MobileLink.db")
             .Options;
+        
+        //TODO _fixture = new Fixture();
 
         _context = new AppDbContext(options);
         await _context.Database.MigrateAsync();
@@ -123,24 +127,27 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task Register_ValidRequest_ShouldCreateUser()
+    public async Task Register_ValidRequest_CreateUser()
     {
-        var request = CreateRegisterRequest("emailDeTeste@gmail.com", "UserTeste", "123456"); 
+        var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "123456"); 
+        //TODO var request = _fixture.Create<Register>(); 
+        
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         var expectedUser = new User
         {
             Email = "emailDeTeste@gmail.com",
             Username = "UserTeste",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("123456")
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(passwordHash)
         };
 
         await AssertRegisterSuccess(request, expectedUser); 
     }
 
     [Test]
-    public async Task Register_InvalidEmail_ShouldReturnBadRequest()
+    public async Task Register_InvalidEmail()
     {
-        var request = CreateRegisterRequest("emailDeTeste", "UserTeste", "123456"); 
+        var request = CreateRegister("emailDeTeste", "UserTeste", "123456"); 
 
         var result = await _userService.Register(request);
 
@@ -148,9 +155,9 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task Register_EmptyEmail_ShouldReturnBadRequest()
+    public async Task Register_EmptyEmail()
     {
-        var request = CreateRegisterRequest("", "UserTeste", "123456"); 
+        var request = CreateRegister("", "UserTeste", "123456"); 
 
         var result = await _userService.Register(request);
 
@@ -158,9 +165,9 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task Register_EmptyPassword_ShouldReturnBadRequest()
+    public async Task Register_EmptyPassword()
     {
-        var request = CreateRegisterRequest("emailDeTeste@gmail.com", "UserTeste", "");
+        var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "");
 
         var result = await _userService.Register(request);
 
@@ -168,11 +175,11 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task Register_ExistingEmail_ShouldReturnBadRequest()
+    public async Task Register_ExistingEmail()
     {
         await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
-        var request = CreateRegisterRequest("emailDeTeste@gmail.com", "UserTeste", "123456");
+        var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "123456");
 
         var result = await _userService.Register(request);
 
@@ -180,11 +187,11 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task Register_ExistingUsername_ShouldReturnBadRequest()
+    public async Task Register_ExistingUsername()
     {
         await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
-        var request = CreateRegisterRequest("emailDeTesteNovo@gmail.com", "UserTeste", "123456");
+        var request = CreateRegister("emailDeTesteNovo@gmail.com", "UserTeste", "123456");
 
         var result = await _userService.Register(request);
 
@@ -192,7 +199,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task DeleteUser_ExistingUser_ShouldReturnOkObjectResult()
+    public async Task DeleteUser_ExistingUser()
     {
         var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
@@ -202,7 +209,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task DeleteUser_NonExistingUser_ShouldReturnNotFoundObjectResult()
+    public async Task DeleteUser_NonExistingUser()
     {
         var result = await _userService.DeleteUser(1);
 
@@ -210,11 +217,11 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdateUser_ValidUsername_ShouldReturnOkObjectResult()
+    public async Task UpdateUser_ValidUsername()
     {
         var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
-        var request = CreateUpdateUserRequest(username: "UserTesteNovo"); 
+        var request = CreateUpdateUser(email:"emailDeTeste@gmail.com",username: "UserTesteNovo"); 
 
         var result = await _userService.UpdateUser(user.IdUser, request);
 
@@ -222,9 +229,9 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdatePassword_NonExistingUser_ShouldReturnNotFoundObjectResult()
+    public async Task UpdatePassword_NonExistingUser()
     {
-        var request = CreateUpdatePasswordRequest("123456");
+        var request = CreateUpdatePassword("123456");
 
         var result = await _userService.UpdatePassword(1, request);
 
@@ -232,11 +239,11 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task UpdatePassword_ExistingUser_ShouldReturnOkObjectResult()
+    public async Task UpdatePassword_ExistingUser()
     {
         var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
-        var request = CreateUpdatePasswordRequest("654321");
+        var request = CreateUpdatePassword("654321");
 
         var result = await _userService.UpdatePassword(user.IdUser, request);
 
@@ -244,7 +251,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetUserByEmail_ExistingUser_ShouldReturnUser()
+    public async Task GetUserByEmail_ExistingUser()
     {
         var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
@@ -254,7 +261,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetUserByEmail_NonExistingUser_ShouldReturnNull()
+    public async Task GetUserByEmail_NonExistingUser()
     {
         var result = await _userService.GetUserByEmail("emailDeTesteInexistente@gmail.com");
 
@@ -262,7 +269,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetUserByUsername_ExistingUser_ShouldReturnUser()
+    public async Task GetUserByUsername_ExistingUser()
     {
         var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
 
@@ -272,7 +279,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetUserByUsername_NonExistingUser_ShouldReturnNull()
+    public async Task GetUserByUsername_NonExistingUser()
     {
         var result = await _userService.GetUserByUsername("UserTesteInexistente");
 
@@ -280,7 +287,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetUsers_ShouldReturnUsers()
+    public async Task GetUsers()
     {
         await CreateUser("emailDeTeste1@gmail.com", "UserTeste1", "123456");
         await CreateUser("emailDeTeste2@gmail.com", "UserTeste2", "123456");
@@ -292,7 +299,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task StoreVerificationCode_ShouldStoreCode()
+    public async Task StoreVerificationCode()
     {
         const string email = "emailDeTeste@gmail.com";
         const string code = "123456";
@@ -304,13 +311,13 @@ public class UserServiceTests
         Assert.That(storedCode, Is.Not.Null);
         Assert.Multiple(() =>
         {
-            Assert.That(storedCode.Email, Is.EqualTo(email));
-            Assert.That(storedCode.Code, Is.EqualTo(code));
+            Assert.That(storedCode?.Email, Is.EqualTo(email));
+            Assert.That(storedCode?.Code, Is.EqualTo(code));
         });
     }
 
     [Test]
-    public async Task GetVerificationCode_ExistingCode_ShouldReturnCode()
+    public async Task GetVerificationCode_ExistingCode()
     {
         const string email = "emailDeTeste@gmail.com";
         const string code = "123456";
@@ -323,7 +330,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task GetVerificationCode_ExpiredCode_ShouldReturnNull()
+    public async Task GetVerificationCode_ExpiredCode()
     {
         const string email = "emailDeTeste@gmail.com";
         const string code = "123456";
@@ -345,7 +352,7 @@ public class UserServiceTests
     }
 
     [Test]
-    public async Task DeleteVerificationCode_ShouldDeleteCode()
+    public async Task DeleteVerificationCode()
     {
         const string email = "emailDeTeste@gmail.com";
         const string code = "123456";

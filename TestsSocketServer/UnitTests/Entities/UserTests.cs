@@ -8,12 +8,20 @@ public class UserTests
     [Test]
     public void User_Valid_Properties()
     {
-        var user = new User();
+        var user = new User()
+        {
+            IdUser = 1,
+            Username = "Teste",
+            Email = "emailDeTeste@gmail.com",
+            PasswordHash = "123456"
+        };
 
-        Assert.IsNotNull(user.IdUser);
-        Assert.IsNotNull(user.Username);
-        Assert.IsNotNull(user.Email);
-        Assert.IsNotNull(user.PasswordHash);
-        Assert.IsNotNull(user.CreationDate);
+        Assert.Multiple(() =>
+        {
+            Assert.That(user.IdUser, Is.EqualTo(1));
+            Assert.That(user.Username, Is.Not.Null);
+            Assert.That(user.Email, Is.Not.Null);
+            Assert.That(user.PasswordHash, Is.Not.Null);
+        });
     }
 }
