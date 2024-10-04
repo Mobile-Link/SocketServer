@@ -8,18 +8,23 @@ public class FileTransferServiceTests
 {
     private FileTransferService _fileTransferService;
     private string _tempDirectory;
+    private string _targetDirectory;
     
     [SetUp]
     public void SetUp()
     {
         _tempDirectory = Path.Combine(Path.GetTempPath(), "FileTransferTemp");
+        Directory.CreateDirectory(_tempDirectory);
+
+        _targetDirectory = Path.Combine(Path.GetTempPath(), "target");
         _fileTransferService = new FileTransferService();
     }
     
-    [Test]
-    public async Task ReceiveFilee()
+    [TestCase("test.txt")]
+    [TestCase("test.jpg")]
+    [TestCase("test.pdf")]
+    public async Task ReceiveFile(string fileName)
     {
-        const string fileName = "test.txt";
         var chunk1 = "Hello, "u8.ToArray();
         var chunk2 = "World!"u8.ToArray();
         
@@ -33,11 +38,11 @@ public class FileTransferServiceTests
         Assert.That(fileContent, Is.EqualTo("Hello, World!"));
     }
     
-    [Test]
-    public async Task SaveCompleteFile()
+    [TestCase("test1.txt", "target1")]
+    [TestCase("test2.txt", "target2")]
+    public async Task SaveCompleteFile(string fileName, string targetDirectoryName)
     {
-        const string fileName = "test.txt";
-        var targetDirectory = Path.Combine(_tempDirectory, "target");
+        var targetDirectory = Path.Combine(_targetDirectory, targetDirectoryName);
         Directory.CreateDirectory(targetDirectory);
         await _fileTransferService.ReceiveFile(fileName, "Hello, World!"u8.ToArray());
         
@@ -52,10 +57,10 @@ public class FileTransferServiceTests
         });
     }
     
-    [Test]
-    public async Task DeleteTempFile()
+    [TestCase("test1.txt")]
+    [TestCase("test2.txt")]
+    public async Task DeleteTempFile(string fileName)
     {
-        const string fileName = "test.txt";
         await _fileTransferService.ReceiveFile(fileName, "Hello, World!"u8.ToArray());
         
         await _fileTransferService.DeleteTempFile(fileName);
@@ -106,6 +111,11 @@ public class FileTransferServiceTests
         if (Directory.Exists(_tempDirectory))
         {
             Directory.Delete(_tempDirectory, true);
+        }
+
+        if (Directory.Exists(_targetDirectory))
+        {
+            Directory.Delete(_targetDirectory, true);
         }
     }
 }

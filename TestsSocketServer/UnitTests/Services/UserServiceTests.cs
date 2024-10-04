@@ -1,4 +1,3 @@
-using AutoFixture;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
@@ -13,7 +12,20 @@ public class UserServiceTests
 {
     private UserService _userService;
     private AppDbContext _context;
-    //TODO private Fixture _fixture;
+
+    [SetUp]
+    public Task SetUp()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase("MobileLink")
+            .Options;
+
+        _context = new AppDbContext(options);
+
+        _userService = new UserService(_context);
+        return Task.CompletedTask;
+    }
+    
     private async Task<User> CreateUser(string email, string username, string password)
     {
         var user = new User
@@ -29,31 +41,20 @@ public class UserServiceTests
         return user;
     }
 
-    private static void AssertBadRequestResult(IActionResult result, string errorMessage)
+    private static void AssertActionResult<T>(IActionResult result, string expectedMessage, string key = "message")
+        where T : ObjectResult
     {
-        Assert.That(result, Is.InstanceOf<BadRequestObjectResult>());
-        var badRequestResult = result as BadRequestObjectResult;
-        Assert.That(badRequestResult.Value, Is.Not.Null);
-        Assert.That(badRequestResult.Value.GetType(), Is.EqualTo(typeof(Dictionary<string, string>)));
-        Assert.That(((Dictionary<string, string>)badRequestResult.Value)["error"], Is.EqualTo(errorMessage));
-    }
-
-    private static void AssertNotFoundResult(IActionResult result, string errorMessage)
-    {
-        Assert.That(result, Is.InstanceOf<NotFoundObjectResult>());
-        var notFoundResult = result as NotFoundObjectResult;
-        Assert.That(notFoundResult.Value, Is.Not.Null);
-        Assert.That(notFoundResult.Value.GetType(), Is.EqualTo(typeof(Dictionary<string, string>)));
-        Assert.That(((Dictionary<string, string>)notFoundResult.Value)["error"], Is.EqualTo(errorMessage));
-    }
-
-    private static void AssertOkObjectResult(IActionResult result, string successMessage)
-    {
-        Assert.That(result, Is.InstanceOf<OkObjectResult>());
-        var okResult = result as OkObjectResult;
-        Assert.That(okResult.Value, Is.Not.Null);
-        var message = okResult.Value as Dictionary<string, string>;
-        Assert.That(message["message"], Is.EqualTo(successMessage));
+        Assert.Multiple(() =>
+        {
+            Assert.That(result, Is.Not.Null, "resultado deveria ser diferente de nulo");
+            Assert.That(result, Is.InstanceOf<T>(), $"resultado deveria ser do tipo {typeof(T)}");
+        
+            var objectResult = result as T;
+            Assert.That(objectResult?.Value, Is.Not.Null, "valor do resultado deveria ser diferente de nulo");
+        
+            var message = objectResult?.Value as Dictionary<string, string>;
+            Assert.That(message?[key], Is.EqualTo(expectedMessage), $"mensagem deveria ser igual a {expectedMessage}");
+        });
     }
 
     private static void AssertUser(User result, string email, string username)
@@ -70,22 +71,24 @@ public class UserServiceTests
     {
         var result = await _userService.Register(request);
 
-        Assert.That(result, Is.InstanceOf<OkObjectResult>());
+        Assert.That(result, Is.AssignableFrom<OkObjectResult>());
+        
         var okResult = result as OkObjectResult;
-        Assert.That(okResult.Value, Is.Not.Null);
-        var createdUser = okResult.Value as User;
-        Assert.That(createdUser, Is.Not.Null);
+        Assert.That(okResult?.Value, Is.Not.Null);
+
+        var createdUser = okResult?.Value as User;
 
         Assert.Multiple(() =>
         {
-            Assert.That(createdUser.Email, Is.EqualTo(expectedUser.Email));
-            Assert.That(createdUser.Username, Is.EqualTo(expectedUser.Username));
-            Assert.That(BCrypt.Net.BCrypt.Verify(request.Password, createdUser.PasswordHash), Is.True); 
+            Assert.That(createdUser, Is.Not.Null);
+            Assert.That(createdUser?.Email, Is.EqualTo(expectedUser.Email));
+            Assert.That(createdUser?.Username, Is.EqualTo(expectedUser.Username));
+            Assert.That(BCrypt.Net.BCrypt.Verify(request.Password, createdUser?.PasswordHash), Is.True); 
         });
 
         Assert.That(await _context.Users.CountAsync(), Is.EqualTo(1));
     }
-
+    
     private static Register CreateRegister(string email, string username, string password)
     {
         return new Register
@@ -95,6 +98,7 @@ public class UserServiceTests
             Password = password
         };
     }
+    
     private static UpdateUser CreateUpdateUser(string username, string email)
     {
         return new UpdateUser
@@ -103,6 +107,7 @@ public class UserServiceTests
             Email = email
         };
     }
+    
     private static UpdatePassword CreateUpdatePassword(string password)
     {
         return new UpdatePassword
@@ -111,131 +116,84 @@ public class UserServiceTests
         };
     }
 
-    [SetUp]
-    public async Task SetUp()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlite("Data Source=MobileLink.db")
-            .Options;
-        
-        //TODO _fixture = new Fixture();
-
-        _context = new AppDbContext(options);
-        await _context.Database.MigrateAsync();
-
-        _userService = new UserService(_context);
-    }
-
     [Test]
     public async Task Register_ValidRequest_CreateUser()
     {
         var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "123456"); 
-        //TODO var request = _fixture.Create<Register>(); 
-        
-        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
         var expectedUser = new User
         {
             Email = "emailDeTeste@gmail.com",
             Username = "UserTeste",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(passwordHash)
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password)
         };
 
         await AssertRegisterSuccess(request, expectedUser); 
     }
 
-    [Test]
-    public async Task Register_InvalidEmail()
+    [TestCase("emailDeTeste", "UserTeste", "123456", "Formato de email inválido", "error")]
+    [TestCase("", "UserTeste", "123456", "Campos são obrigatórios", "error")]
+    [TestCase("emailDeTeste@gmail.com", "UserTeste", "", "Campos são obrigatórios", "error")]
+    public async Task Register_InvalidInputs(string email, string username, string password, string expectedMessage, string key)
     {
-        var request = CreateRegister("emailDeTeste", "UserTeste", "123456"); 
+        var request = CreateRegister(email, username, password);
 
         var result = await _userService.Register(request);
 
-        AssertBadRequestResult(result, "Formato de email inválido");
+        AssertActionResult<BadRequestObjectResult>(result, expectedMessage, key);
     }
 
-    [Test]
-    public async Task Register_EmptyEmail()
-    {
-        var request = CreateRegister("", "UserTeste", "123456"); 
-
-        var result = await _userService.Register(request);
-
-        AssertBadRequestResult(result, "Campos são obrigatórios");
-    }
-
-    [Test]
-    public async Task Register_EmptyPassword()
-    {
-        var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "");
-
-        var result = await _userService.Register(request);
-
-        AssertBadRequestResult(result, "Campos são obrigatórios");
-    }
-
-    [Test]
-    public async Task Register_ExistingEmail()
+    [TestCase("emailDeTeste@gmail.com", "UserTesteNovo", "Email ou Username já cadastrado")]
+    [TestCase("emailDeTesteNovo@gmail.com", "UserTeste", "Email ou Username já cadastrado")]
+    public async Task Register_ExistingEmailOrUsername(string email, string username, string expectedMessage)
     {
         await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
-
-        var request = CreateRegister("emailDeTeste@gmail.com", "UserTeste", "123456");
-
+        
+        var request = CreateRegister(email, username, "123456");
+        
         var result = await _userService.Register(request);
-
-        AssertBadRequestResult(result, "Email ou Username já cadastrado");
+        
+        AssertActionResult<BadRequestObjectResult>(result, expectedMessage, "error");
     }
 
-    [Test]
-    public async Task Register_ExistingUsername()
+    [TestCase(true, "Usuário removido com sucesso", typeof(OkObjectResult))]
+    [TestCase(false, "Usuário não encontrado", typeof(NotFoundObjectResult))]
+    public async Task DeleteUser(bool userExists, string expectedMessage, Type expectedType)
     {
-        await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
-
-        var request = CreateRegister("emailDeTesteNovo@gmail.com", "UserTeste", "123456");
-
-        var result = await _userService.Register(request);
-
-        AssertBadRequestResult(result, "Email ou Username já cadastrado"); 
+        if (userExists)
+        {
+            var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
+            var result = await _userService.DeleteUser(user.IdUser);
+            AssertActionResult<OkObjectResult>(result, expectedMessage);
+        }
+        else
+        {
+            var result = await _userService.DeleteUser(1);
+            AssertActionResult<NotFoundObjectResult>(result, expectedMessage, "error");
+        }
     }
 
-    [Test]
-    public async Task DeleteUser_ExistingUser()
+    [TestCase(true, "UserTesteNovo", "emailDeTeste@gmail.com", "Usuário atualizado com sucesso", typeof(OkObjectResult))]
+    [TestCase(false, "UserTeste", "emailDeTeste@gmail.com", "Usuário não encontrado", typeof(NotFoundObjectResult))]
+    public async Task UpdateUser(bool userExists, string username, string email, string expectedMessage, Type expectedType)
     {
-        var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
-
-        var result = await _userService.DeleteUser(user.IdUser);
-
-        AssertOkObjectResult(result, "Usuário removido com sucesso");
-    }
-
-    [Test]
-    public async Task DeleteUser_NonExistingUser()
-    {
-        var result = await _userService.DeleteUser(1);
-
-        AssertNotFoundResult(result, "Usuário não encontrado");
-    }
-
-    [Test]
-    public async Task UpdateUser_ValidUsername()
-    {
-        var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
-
-        var request = CreateUpdateUser(email:"emailDeTeste@gmail.com",username: "UserTesteNovo"); 
-
-        var result = await _userService.UpdateUser(user.IdUser, request);
-
-        AssertOkObjectResult(result, "Usuário atualizado com sucesso");
-    }
-
-    [Test]
-    public async Task UpdatePassword_NonExistingUser()
-    {
-        var request = CreateUpdatePassword("123456");
-
-        var result = await _userService.UpdatePassword(1, request);
-
-        AssertNotFoundResult(result, "Usuário não encontrado");
+        if (userExists)
+        {
+            var user = await CreateUser("emailDeTeste@gmail.com", "UserTeste", "123456");
+            var request = CreateUpdateUser(username, email);
+            var result = await _userService.UpdateUser(user.IdUser, request);
+            
+            AssertActionResult<OkObjectResult>(result, expectedMessage);
+        }
+        else
+        {
+            var result = await _userService.UpdateUser(1, CreateUpdateUser(username, email));
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.Null, "resultado não deveria ser nulo");
+                Assert.That(expectedType, Is.EqualTo(typeof(NotFoundObjectResult)), "tipo de resultado deveria ser NotFoundObjectResult");
+            });
+        }
     }
 
     [Test]
@@ -247,7 +205,7 @@ public class UserServiceTests
 
         var result = await _userService.UpdatePassword(user.IdUser, request);
 
-        AssertOkObjectResult(result, "Senha atualizada com sucesso");
+        AssertActionResult<OkObjectResult>(result, "Senha atualizada com sucesso");
     }
 
     [Test]
@@ -333,7 +291,7 @@ public class UserServiceTests
     public async Task GetVerificationCode_ExpiredCode()
     {
         const string email = "emailDeTeste@gmail.com";
-        const string code = "123456";
+        const string code = "";
 
         var verificationCode = new VerificationCode
         {
