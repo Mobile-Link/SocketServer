@@ -17,6 +17,7 @@ public class EmailService
     }
     public async Task SendVerificationEmailAsync(string email, string verificationCode)
     {
+        //TODO add EnDeviceOs and AccessLocation to the email
         var client = new RestClient($"https://api.mailgun.net/v3");
         
         var authHeader = Convert.ToBase64String(Encoding.UTF8.GetBytes($"api:{_apiKey}"));

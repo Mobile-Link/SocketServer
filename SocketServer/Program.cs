@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using SocketServer.ChatHub;
 using SocketServer.Data;
 using SocketServer.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +20,8 @@ builder.Services.AddScoped<EmailService>(sp => new EmailService(
     builder.Configuration["MailgunApiKey"],
     builder.Configuration["MailgunDomain"]
     ));
-builder.Services.AddScoped<CodeGeneratorService>();
-builder.Services.AddScoped<CodeExpirationService>();
+builder.Services.AddScoped<VerificationCodeService>();
+builder.Services.AddScoped<CachingService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -44,6 +45,12 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddStackExchangeRedisCache(o =>
+{
+    o.InstanceName = "instance";
+    o.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+});
 
 var app = builder.Build();
 
