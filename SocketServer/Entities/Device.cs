@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SocketServer.Entities;
+using SocketServer.Enums;
 
 namespace SocketServer.Entities;
 
@@ -19,5 +20,5 @@ public class Device
     public DateTime CreationDate { get; set; }
     public DateTime AlterationDate { get; set; }
     [ForeignKey("enDeviceOS")]
-    public EnDeviceOS EnDeviceOs { get; set; }
+    public EnDeviceOSType EnDeviceOsType { get; set; }
 }

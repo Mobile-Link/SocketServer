@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SocketServer.Enums;
 
 namespace SocketServer.Entities;
 
@@ -12,5 +13,5 @@ public class History
     [ForeignKey("idDevice")]
     public Device Device { get; set; }
     [ForeignKey("enAction")]
-    public EnAction EnAction { get; set; }
+    public EnActionsType EnActionType { get; set; }
 }
