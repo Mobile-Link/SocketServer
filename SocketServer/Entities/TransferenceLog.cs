@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SocketServer.Enums;
 
 namespace SocketServer.Entities;
 
@@ -10,5 +11,5 @@ public class TransferenceLog
     [ForeignKey("idTransference")]
     public Transference Transference { get; set; }
     [ForeignKey("enStatus")]
-    public EnStatus EnStatus { get; set; }
+    public EnStatusType EnStatusType { get; set; }
 }
