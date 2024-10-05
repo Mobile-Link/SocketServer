@@ -8,7 +8,7 @@ using SocketServer.Services;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddSignalR();
 builder.Services.AddScoped<FileTransferService>();
 builder.Services.AddScoped<ConnectionManagerService>();
@@ -44,7 +44,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddDbContext<AppDbContext>(options => 
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(
+        builder.Configuration.GetConnectionString("DefaultConnection")
+    ));
 
 builder.Services.AddStackExchangeRedisCache(o =>
 {
