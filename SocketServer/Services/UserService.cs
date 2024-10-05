@@ -130,39 +130,4 @@ public class UserService(AppDbContext context)
             await context.SaveChangesAsync();
         }
     }
-    
-    public async Task StoreVerificationCode(string email, string code)
-    {
-        var verificationCode = new VerificationCode
-        {
-            Email = email,
-            Code = code,
-            CreationDate = DateTime.Now,
-            ExpirationDate = DateTime.Now.AddMinutes(1)
-        };
-        
-        context.VerificationCodes.Add(verificationCode);
-        await context.SaveChangesAsync();
-    }
-    
-    public async Task<string> GetVerificationCode(string email)
-    {
-        var verificationCode = await context.VerificationCodes.FirstOrDefaultAsync(vc => vc.Email == email);
-        if (verificationCode != null && verificationCode.ExpirationDate >= DateTime.Now)
-        {
-            return verificationCode.Code;
-        }
-
-        return null;
-    }
-    
-    public async Task DeleteVerificationCode(string email)
-    {
-        var verificationCode = await context.VerificationCodes.FirstOrDefaultAsync(vc => vc.Email == email);
-        if (verificationCode != null)
-        {
-            context.VerificationCodes.Remove(verificationCode);
-            await context.SaveChangesAsync();
-        }
-    }
 }

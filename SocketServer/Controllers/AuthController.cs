@@ -8,7 +8,7 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 
-public class AuthController(AuthService authService, UserService userService, EmailService emailService, CodeGeneratorService codeGeneratorService) : ControllerBase
+public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<IActionResult> Login(Login request)
@@ -32,9 +32,9 @@ public class AuthController(AuthService authService, UserService userService, Em
             return BadRequest(ModelState);
         }
 
-        var verificationCode = codeGeneratorService.GenerateVerificationCode();
+        var verificationCode = verificationCodeService.GenerateVerificationCode();
         
-        await userService.StoreVerificationCode(request.Email, verificationCode);
+        await verificationCodeService.StoreVerificationCode(request.Email, verificationCode);
         
         await emailService.SendVerificationEmailAsync(request.Email, verificationCode);
 
@@ -44,7 +44,7 @@ public class AuthController(AuthService authService, UserService userService, Em
     [HttpPost("verifyCode")]
     public async Task<IActionResult> VerifyCode(string email, string code, Register request)
     {
-        var storedCode = await userService.GetVerificationCode(email);
+        var storedCode = await verificationCodeService.GetVerificationCode(email);
         
         if (storedCode == null || storedCode != code)
         {
@@ -57,8 +57,7 @@ public class AuthController(AuthService authService, UserService userService, Em
         
         if (registerResult is OkObjectResult)
         {
-            await userService.DeleteVerificationCode(email);
-            var user = (registerResult as OkObjectResult).Value as User;
+            await verificationCodeService.DeleteVerificationCode(email);
             var token = authService.GenerateJwtToken(email);
             return Ok(new { token });
         }
