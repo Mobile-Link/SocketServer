@@ -1,17 +1,16 @@
 using System.ComponentModel.DataAnnotations;
-using System.Xml.Schema;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Models;
 using SocketServer.Entities;
+using SocketServer.Infra;
 
 namespace SocketServer.Services;
 
-public class UserService(AppDbContext context)
+public class UserService(AppDbContext context, VerificationCodeService verificationCodeService)
 {
-    public async Task<IActionResult> Register(Register request)
+    public async Task<IActionResult> Register(Register request, string code)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
         {
@@ -31,6 +30,13 @@ public class UserService(AppDbContext context)
         {
             return new BadRequestObjectResult(new {error = "Email já cadastrado"});
         }
+        
+        var storedCode = await verificationCodeService.GetVerificationCode(request.Email);
+        
+        if (storedCode == null || storedCode?.Code != code)
+        {
+           return new BadRequestObjectResult(new { error = "Código inválido ou expirado" });
+        }
 
         var user = new User
         {
@@ -41,8 +47,11 @@ public class UserService(AppDbContext context)
         };
         context.Users.Add(user);
         await context.SaveChangesAsync();
+        
+        await verificationCodeService.DeleteVerificationCode(request.Email);
+        var token = GenerateCode.GenerateJwtToken(request.Email);
 
-        return new OkObjectResult(user);
+        return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token});
     }
 
     public async Task<IActionResult> DeleteUser(int IdUser)
@@ -85,9 +94,9 @@ public class UserService(AppDbContext context)
         return new OkObjectResult(new { message = "Usuário atualizado com sucesso" });
     }
     
-    public async Task<IActionResult> UpdatePassword(int IdUser, UpdatePassword request)
+    public async Task<IActionResult> UpdatePassword(string email, UpdatePassword request)
     {
-        var user = await context.Users.FindAsync(IdUser);
+        var user = await context.Users.FindAsync(email);
         
         if (user == null)
         {
@@ -119,15 +128,5 @@ public class UserService(AppDbContext context)
         var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
         
         return user;
-    }
-    
-    public async Task ActivateUser(string email)
-    {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
-        
-        if (user != null)
-        {
-            await context.SaveChangesAsync();
-        }
     }
 }

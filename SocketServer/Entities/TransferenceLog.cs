@@ -12,4 +12,6 @@ public class TransferenceLog
     public Transference Transference { get; set; }
     [ForeignKey("enStatus")]
     public EnStatusType EnStatusType { get; set; }
+    public DateTime Date { get; set; }
+    public string ServePath { get; set; }
 }

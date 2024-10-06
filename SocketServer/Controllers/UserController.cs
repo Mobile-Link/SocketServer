@@ -18,21 +18,18 @@ public class UserController(UserService userService) : ControllerBase
     [HttpDelete("user/{IdUser}")]
     public async Task<IActionResult> DeleteUser(int idUser)
     {
-        var result = await userService.DeleteUser(idUser);
-        return result;
+        return await userService.DeleteUser(idUser);
     }
     
     [HttpPut("user/{IdUser}")]
     public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
     {
-        var result = await userService.UpdateUser(idUser, request);
-        return result;
+        return await userService.UpdateUser(idUser, request);
     }
     
     [HttpPut ("user/{IdUser}/password")]
-    public async Task<IActionResult> UpdatePassword(int idUser, UpdatePassword request)
+    public async Task<IActionResult> UpdatePassword(string email, UpdatePassword request)
     {
-        var result = await userService.UpdatePassword(idUser, request);
-        return result;
+        return await userService.UpdatePassword(email, request);
     }
 }

@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using SocketServer.Entities;
 using SocketServer.Models;
 using SocketServer.Services;
 
@@ -11,59 +10,38 @@ namespace SocketServer.Controllers;
 public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService) : ControllerBase
 {
     [HttpPost("login")]
-    public async Task<IActionResult> Login(Login request)
+    public async Task<IActionResult> Login([FromBody] Login request)
     {
-        if (await authService.ValidateCredentials(request.EmailOrUsername, request.Password))
-        {
-            var token = authService.GenerateJwtToken(request.EmailOrUsername);
-            return Ok(new { token });
-        }
-        else
-        {
-            return Unauthorized(new { error = "Credenciais inválidas" });
-        }
+        return await authService.ValidateCredentials(request.EmailOrUsername, request.Password);
     }
     
-    [HttpPost("register")]
-    public async Task<IActionResult> Register(Register request)
+    [HttpPost("sendCode")]
+    public async Task<IActionResult> SendCode(string email)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
-
         var verificationCode = verificationCodeService.GenerateVerificationCode();
         
-        await verificationCodeService.StoreVerificationCode(request.Email, verificationCode);
+        await verificationCodeService.StoreVerificationCode(email, verificationCode);
         
-        await emailService.SendVerificationEmailAsync(request.Email, verificationCode);
+        await emailService.SendVerificationEmailAsync(email, verificationCode);
 
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
 
     [HttpPost("verifyCode")]
-    public async Task<IActionResult> VerifyCode(string email, string code, Register request)
+    public async Task<IActionResult> VerifyCode(string email, string code)
     {
-        var storedCode = await verificationCodeService.GetVerificationCode(email);
-        
-        if (storedCode == null || storedCode.Code != code)
-        {
-            return BadRequest(new { error = "Código inválido ou expirado" });
-        }
-        
-        var registerResult = await userService.Register(request);
-        
-        await userService.ActivateUser(email);
-        
-        if (registerResult is OkObjectResult)
-        {
-            await verificationCodeService.DeleteVerificationCode(email);
-            var token = authService.GenerateJwtToken(email);
-            return Ok(new { token });
-        }
-        else
-        {
-            return BadRequest(registerResult);
-        }
+        return await verificationCodeService.ValidateVerificationCode(email, code);
+    }
+    
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] Register request, string code)
+    {
+        return await userService.Register(request, code);
+    }
+    
+    [HttpPost("forgotPassword")]
+    public async Task<IActionResult> ForgotPassword(string email, UpdatePassword request)
+    {
+        return await userService.UpdatePassword(email, request);
     }
 }

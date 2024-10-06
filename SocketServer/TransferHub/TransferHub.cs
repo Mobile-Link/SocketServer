@@ -9,12 +9,12 @@ namespace SocketServer.ChatHub;
 public class TransferHub : Hub
 {
     private readonly ConnectionManagerService _connectionManagerService;
-    private readonly FileTransferService _fileTransferService;
+    private readonly TransferService _transferService;
     private readonly Dictionary<string, List<string>> _transferringFiles = new Dictionary<string, List<string>>();
     
-    public TransferHub(ConnectionManagerService connectionManagerService, FileTransferService fileTransferService)
+    public TransferHub(ConnectionManagerService connectionManagerService, TransferService transferService)
     {
-        _fileTransferService = fileTransferService;
+        _transferService = transferService;
         _connectionManagerService = connectionManagerService;
     }
     
@@ -70,7 +70,7 @@ public class TransferHub : Hub
             
         await Clients.User(userId).SendAsync("FileTransferComplete", fileName, fileSize);
         
-        await _fileTransferService.DeleteTempFile(fileName);
+        await _transferService.DeleteTempFile(fileName);
     }
         
     public async Task StartTransfer(string userId, string fileName, long fileSize)
@@ -80,6 +80,6 @@ public class TransferHub : Hub
     
     public async Task ReceiveFile(string connectionId,string fileName, byte[] chunk)
     {
-        await _fileTransferService.ReceiveFile(fileName, chunk);
+        await _transferService.ReceiveFile(fileName, chunk);
     }
 }

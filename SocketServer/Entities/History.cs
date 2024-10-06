@@ -14,4 +14,7 @@ public class History
     public Device Device { get; set; }
     [ForeignKey("enAction")]
     public EnActionsType EnActionType { get; set; }
+    public string Description { get; set; }
+    public DateTime Date { get; set; }
+    
 }

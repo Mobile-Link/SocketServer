@@ -8,22 +8,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<User> Users { get; set; } // service e controller feita
     //
-    public DbSet<VerificationCode> VerificationCodes { get; set; } // service e controller feita
+    public DbSet<Device> Devices { get; set; } // TODO fazer controller e service
     //
-    public DbSet<Device> Devices { get; set; }
+    public DbSet<Storage> Storages { get; set; } // TODO fazer controller e service
     //
-    public DbSet<Storage> Storages { get; set; }
-    //
-    public DbSet<Transference> Transfers { get; set; } // service feita TODO - controller
+    public DbSet<Transference> Transfers { get; set; } // service feita, TODO - controller
     public DbSet<TransferenceLog> TransferenceLogs { get; set; }
     //
-    public DbSet<AccessLog> AccessLogs { get; set; }
+    public DbSet<AccessLog> AccessLogs { get; set; } // TODO fazer controller e service
     //
-    public DbSet<EnAction> EnActions { get; set; }
-    public DbSet<EnDeviceOS> EnDeviceOSs { get; set; }
-    public DbSet<EnStatus> EnStatuses { get; set; }
+    public DbSet<EnAction> EnActions { get; set; } // enums criados
+    public DbSet<EnDeviceOS> EnDeviceOSs { get; set; } // enums criados
+    public DbSet<EnStatus> EnStatuses { get; set; } // enums criados
     //
-    public DbSet<History> History { get; set; }
+    public DbSet<History> Histories { get; set; } // TODO fazer controller e service
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -40,8 +38,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<History>()
             .Property(h => h.EnActionType)
             .HasConversion<int>();
-        
-        
     }
 
 }

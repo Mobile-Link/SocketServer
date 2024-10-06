@@ -10,7 +10,7 @@ using SocketServer.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddSignalR();
-builder.Services.AddScoped<FileTransferService>();
+builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<ConnectionManagerService>();
 builder.Services.AddScoped<ConnectionManagerService>(sp =>
     new ConnectionManagerService(sp.GetRequiredService<IHubContext<TransferHub>>()));

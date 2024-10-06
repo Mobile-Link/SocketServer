@@ -1,10 +1,10 @@
 namespace SocketServer.Services;
 
-public class FileTransferService
+public class TransferService
 {
     private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "FileTransferTemp");
     
-    public FileTransferService()
+    public TransferService()
     {
         if (!Directory.Exists(_tempDirectory))
         {
@@ -15,10 +15,8 @@ public class FileTransferService
     public async Task ReceiveFile(string fileName, byte[] chunk)
     {
         var filePath = Path.Combine(_tempDirectory, fileName);
-        using (var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write))
-        {
-            await fileStream.WriteAsync(chunk, 0, chunk.Length);
-        }
+        await using var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
+        await fileStream.WriteAsync(chunk);
     }
     
     public async Task SaveCompleteFile(string fileName, string targetDirectory)

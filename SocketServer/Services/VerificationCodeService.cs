@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
+using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
 
 namespace SocketServer.Services;
@@ -41,5 +42,19 @@ public class VerificationCodeService(ExpirationDbContext context, IConfiguration
         }
         context.VerificationCodes.Remove(codeToDelete);
         await context.SaveChangesAsync();
+    }
+    
+    public async Task<IActionResult> ValidateVerificationCode(string email, string code)
+    {
+        var storedCode = await GetVerificationCode(email);
+        
+        if (storedCode == null || storedCode?.Code != code)
+        {
+            return new BadRequestObjectResult(new {error = "Código inválido"});;
+        }
+        else
+        {
+            return new OkObjectResult(new { message = "Código validado com sucesso" });
+        }
     }
 }
