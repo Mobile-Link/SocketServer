@@ -16,7 +16,6 @@ public class Device
     public long AvailableSpace { get; set; }
     public long OccupiedSpace { get; set; }
     public string Name { get; set; }
-    public string Token { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime AlterationDate { get; set; }
     [ForeignKey("enDeviceOS")]
