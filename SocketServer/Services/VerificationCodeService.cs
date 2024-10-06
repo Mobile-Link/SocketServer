@@ -17,12 +17,11 @@ public class VerificationCodeService(ExpirationDbContext context, IConfiguration
 
     public async Task StoreVerificationCode(string email, string code)
     {
-        var expirationSeconds = long.Parse(configuration["CodeExpirationTimeSeconds"] ?? "600");
         var verificationCode = new VerificationCode()
         {
             Email = email,
             Code = code,
-            ExpirationDate = DateTime.Now.AddSeconds(expirationSeconds)
+            InsertionDate = DateTime.Now
         };
         await context.VerificationCodes.AddAsync(verificationCode);
         await context.SaveChangesAsync();
