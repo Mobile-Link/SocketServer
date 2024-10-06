@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
 using SocketServer.ChatHub;
 using SocketServer.Data;
 using SocketServer.Services;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -19,9 +19,8 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
     builder.Configuration["MailgunApiKey"],
     builder.Configuration["MailgunDomain"]
-    ));
+));
 builder.Services.AddScoped<VerificationCodeService>();
-builder.Services.AddScoped<CachingService>();
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -35,7 +34,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => 
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         builder.Configuration.Bind("JwtSettings", options));
 
 builder.Services.AddAuthorization(options =>
@@ -43,16 +42,19 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 });
 
-builder.Services.AddDbContext<AppDbContext>(options => 
+builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")
     ));
 
-builder.Services.AddStackExchangeRedisCache(o =>
-{
-    o.InstanceName = "instance";
-    o.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-});
+builder.Services.AddDbContext<ExpirationDbContext>(options =>
+    {
+        options.UseMongoDB(
+            builder.Configuration.GetConnectionString("MongoDBConnection"),
+            builder.Configuration.GetConnectionString("MongoDBDatabaseName")
+        );
+    }
+);
 
 var app = builder.Build();
 

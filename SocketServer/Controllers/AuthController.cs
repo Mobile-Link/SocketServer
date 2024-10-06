@@ -46,7 +46,7 @@ public class AuthController(AuthService authService, UserService userService, Em
     {
         var storedCode = await verificationCodeService.GetVerificationCode(email);
         
-        if (storedCode == null || storedCode != code)
+        if (storedCode == null || storedCode.Code != code)
         {
             return BadRequest(new { error = "Código inválido ou expirado" });
         }

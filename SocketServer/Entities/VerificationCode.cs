@@ -1,15 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace SocketServer.Entities;
 
 public class VerificationCode
 {
-    [Key]
-    public int IdCode { get; set; }
+    [BsonId]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public string Id { get; set; }
     public string Code { get; set; }
     public string Email { get; set; }
-    public string AccessLocation { get; set; }
-    [ForeignKey("enDeviceOS")]
-    public EnDeviceOS EnDeviceOs { get; set; }
+    public DateTime InsertionDate { get; set; }
 }
