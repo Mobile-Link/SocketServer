@@ -16,6 +16,7 @@ builder.Services.AddScoped<ConnectionManagerService>(sp =>
     new ConnectionManagerService(sp.GetRequiredService<IHubContext<TransferHub>>()));
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
     builder.Configuration["MailgunApiKey"],
     builder.Configuration["MailgunDomain"]

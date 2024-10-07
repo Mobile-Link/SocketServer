@@ -4,13 +4,12 @@ using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Models;
 using SocketServer.Entities;
-using SocketServer.Infra;
 
 namespace SocketServer.Services;
 
-public class UserService(AppDbContext context, VerificationCodeService verificationCodeService)
+public class UserService(AppDbContext context, VerificationCodeService verificationCodeService, DeviceService deviceService)
 {
-    public async Task<IActionResult> Register(Register request, string code)
+    public async Task<IActionResult> Register(Register request)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
         {
@@ -31,12 +30,7 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
             return new BadRequestObjectResult(new {error = "Email já cadastrado"});
         }
         
-        var storedCode = await verificationCodeService.GetVerificationCode(request.Email);
-        
-        if (storedCode == null || storedCode?.Code != code)
-        {
-           return new BadRequestObjectResult(new { error = "Código inválido ou expirado" });
-        }
+        await verificationCodeService.ValidateVerificationCode(request.Email, request.Code);
 
         var user = new User
         {
@@ -48,15 +42,18 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         context.Users.Add(user);
         await context.SaveChangesAsync();
         
+        var device = await deviceService.CreateDevice(user, request.DeviceName);
+        
         await verificationCodeService.DeleteVerificationCode(request.Email);
-        var token = GenerateCode.GenerateJwtToken(request.Email);
+        
+        var token = await deviceService.CreateDeviceToken(device, user);
 
-        return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token});
+        return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token});
     }
 
-    public async Task<IActionResult> DeleteUser(int IdUser)
+    public async Task<IActionResult> DeleteUser(int idUser)
     {
-        var user = await context.Users.FindAsync(IdUser);
+        var user = await context.Users.FindAsync(idUser);
         
         if (user == null)
         {
@@ -69,13 +66,13 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         return new OkObjectResult(new {message = "Usuário removido com sucesso"});
     }
     
-    public async Task<IActionResult> UpdateUser(int IdUser, UpdateUser request)
+    public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
     {
-        var user = await context.Users.FindAsync(IdUser);
+        var user = await context.Users.FindAsync(idUser);
         
         if (user == null)
         {
-            return null;
+            return new NotFoundObjectResult(new {error = "Usuário não encontrado"});
         }
         
         if(!string.IsNullOrEmpty(request.Username))

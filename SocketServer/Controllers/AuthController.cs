@@ -34,9 +34,9 @@ public class AuthController(AuthService authService, UserService userService, Em
     }
     
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] Register request, string code)
+    public async Task<IActionResult> Register([FromBody] Register request)
     {
-        return await userService.Register(request, code);
+        return await userService.Register(request);
     }
     
     [HttpPost("forgotPassword")]

@@ -12,4 +12,10 @@ public class Register
     
     [Required]
     public string Password { get; set; }
+    
+    [Required]
+    public string Code { get; set; }
+    
+    [Required]
+    public string DeviceName { get; set; }
 }
