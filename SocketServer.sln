@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketServer", "SocketServer\SocketServer.csproj", "{A6F46A35-A2F4-41BB-99E1-594FD265A30E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestsSocketServer", "TestsSocketServer\TestsSocketServer.csproj", "{5E46AC7C-06C6-49C8-8A08-69641BB2AD47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{A6F46A35-A2F4-41BB-99E1-594FD265A30E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6F46A35-A2F4-41BB-99E1-594FD265A30E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6F46A35-A2F4-41BB-99E1-594FD265A30E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E46AC7C-06C6-49C8-8A08-69641BB2AD47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E46AC7C-06C6-49C8-8A08-69641BB2AD47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E46AC7C-06C6-49C8-8A08-69641BB2AD47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E46AC7C-06C6-49C8-8A08-69641BB2AD47}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
