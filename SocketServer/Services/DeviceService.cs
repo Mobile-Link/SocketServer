@@ -19,7 +19,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             Name = deviceName,
             CreationDate = DateTime.Now,
             AlterationDate = DateTime.Now,
-            EnDeviceOsType = EnDeviceOSType.Windows,
+            EnDeviceOs = EnDeviceOs.Windows,
         };
         await context.Devices.AddAsync(device);
         await context.SaveChangesAsync();

@@ -9,7 +9,7 @@ public class Device
 {
     [Key] 
     public int IdDevice { get; set; }
-    [ForeignKey("idUser")]
+    [ForeignKey("IdUser")]
     public User User { get; set; }
     public bool IsDeleted { get; set; }
     public string LastLocation { get; set; }
@@ -18,6 +18,6 @@ public class Device
     public string Name { get; set; }
     public DateTime CreationDate { get; set; }
     public DateTime AlterationDate { get; set; }
-    [ForeignKey("enDeviceOS")]
-    public EnDeviceOSType EnDeviceOsType { get; set; }
+    [ForeignKey("EnDeviceOS")]
+    public EnDeviceOs EnDeviceOs { get; set; }
 }

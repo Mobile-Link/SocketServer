@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace SocketServer.Enums;
 
-public enum EnStatusType
+public enum EnStatus
 {
     [Description("Not started")]
     NotStarted = 1,

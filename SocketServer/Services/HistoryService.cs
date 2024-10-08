@@ -18,11 +18,11 @@ public class HistoryService(AppDbContext context)
         return await context.Histories.FindAsync(deviceId);
     }
     
-    public async Task<History> CreateHistory(EnActionsType enAction, string description, DateTime date, User user, Device device)
+    public async Task<History> CreateHistory(EnActions enAction, string description, DateTime date, User user, Device device)
     {
         var history = new History
         {
-            EnActionType = enAction,
+            EnAction = enAction,
             Description = description,
             Date = date,
             User = user,
@@ -37,7 +37,7 @@ public class HistoryService(AppDbContext context)
     {
         var history = new History
         {
-            EnActionType = EnActionsType.DeletedDevice,
+            EnAction = EnActions.DeletedDevice,
             Description = $"O dispositivo {device.Name} foi deletado",
             Date = DateTime.Now,
             User = user,
@@ -51,7 +51,7 @@ public class HistoryService(AppDbContext context)
     {
         var history = new History
         {
-            EnActionType = EnActionsType.AddedDevice,
+            EnAction = EnActions.AddedDevice,
             Description = $"O dispositivo {device.Name} foi adicionado",
             Date = DateTime.Now,
             User = user,
@@ -65,7 +65,7 @@ public class HistoryService(AppDbContext context)
     {
         var history = new History
         {
-            EnActionType = EnActionsType.ChangedPassword,
+            EnAction = EnActions.ChangedPassword,
             Description = "A senha foi alterada",
             Date = DateTime.Now,
             User = user
@@ -78,7 +78,7 @@ public class HistoryService(AppDbContext context)
     {
         var history = new History
         {
-            EnActionType = EnActionsType.ChangedDevice,
+            EnAction = EnActions.ChangedDevice,
             Description = $"O nome do dispositivo {device.Name} foi alterado",
             Date = DateTime.Now,
             User = user,
@@ -92,7 +92,7 @@ public class HistoryService(AppDbContext context)
     {
         var history = new History
         {
-            EnActionType = EnActionsType.ChangedUser,
+            EnAction = EnActions.ChangedUser,
             Description = "O nome do usuário foi alterado",
             Date = DateTime.Now,
             User = user

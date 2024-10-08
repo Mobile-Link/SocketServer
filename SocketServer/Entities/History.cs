@@ -7,13 +7,13 @@ namespace SocketServer.Entities;
 public class History
 {
     [Key]
-    public int idHistory { get; set; }
-    [ForeignKey("idUser")]
+    public int IdHistory { get; set; }
+    [ForeignKey("IdUser")]
     public User User { get; set; }
-    [ForeignKey("idDevice")]
+    [ForeignKey("IdDevice")]
     public Device Device { get; set; }
-    [ForeignKey("enAction")]
-    public EnActionsType EnActionType { get; set; }
+    [ForeignKey("EnAction")]
+    public EnActions EnAction { get; set; }
     public string Description { get; set; }
     public DateTime Date { get; set; }
     

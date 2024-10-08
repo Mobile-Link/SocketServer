@@ -23,11 +23,13 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         
         //TODO - Fazer um dicionário de erros
         
-        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+        var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email || u.Username == request.Username);
+        
+        //TODO - Talvez fazer rotas de validação de email e username existentes
         
         if (existingUser != null)
         {
-            return new BadRequestObjectResult(new {error = "Email já cadastrado"});
+            return new BadRequestObjectResult(new {error = "Email ou Usuário já cadastrado"});
         }
         
         await verificationCodeService.ValidateVerificationCode(request.Email, request.Code);

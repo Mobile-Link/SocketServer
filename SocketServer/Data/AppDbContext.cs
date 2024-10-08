@@ -17,26 +17,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     //
     public DbSet<AccessLog> AccessLogs { get; set; } // TODO fazer controller e service
     //
-    public DbSet<EnAction> EnActions { get; set; } // enums criados
-    public DbSet<EnDeviceOS> EnDeviceOSs { get; set; } // enums criados
-    public DbSet<EnStatus> EnStatuses { get; set; } // enums criados
+    public DbSet<EntitieAction> EnActions { get; set; } // enums criados
+    public DbSet<EntitieDeviceOS> EnDeviceOSs { get; set; } // enums criados
+    public DbSet<EntitieStatus> EnStatuses { get; set; } // enums criados
     //
     public DbSet<History> Histories { get; set; } // TODO fazer controller e service
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Device>()
-            .Property(d => d.EnDeviceOsType)
+            .Property(d => d.EnDeviceOs)
             .HasConversion<int>();
         
         
         modelBuilder.Entity<TransferenceLog>()
-            .Property(t => t.EnStatusType)
+            .Property(t => t.EnStatus)
             .HasConversion<int>();
         
         
         modelBuilder.Entity<History>()
-            .Property(h => h.EnActionType)
+            .Property(h => h.EnAction)
             .HasConversion<int>();
     }
 

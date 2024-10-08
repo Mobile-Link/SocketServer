@@ -6,10 +6,10 @@ namespace SocketServer.Entities;
 public class AccessLog
 {
     [Key]
-    public int idAccessLog { get; set; }
-    [ForeignKey("idUser")]
+    public int IdAccessLog { get; set; }
+    [ForeignKey("IdUser")]
     public User User { get; set; }
-    [ForeignKey("idDevice")]
+    [ForeignKey("IdDevice")]
     public Device Device { get; set; }
     public DateTime Date { get; set; }
     public string AccessLocation { get; set; }

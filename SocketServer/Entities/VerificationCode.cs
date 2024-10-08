@@ -8,7 +8,7 @@ public class VerificationCode
 {
     [BsonId]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; }
+    public string IdVerificationCode { get; set; }
     public string Code { get; set; }
     public string Email { get; set; }
     public DateTime InsertionDate { get; set; }

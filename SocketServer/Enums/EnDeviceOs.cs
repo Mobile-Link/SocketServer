@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace SocketServer.Enums;
 
-public enum EnDeviceOSType
+public enum EnDeviceOs
 {
     [Description("Linux")]
     Linux = 1,

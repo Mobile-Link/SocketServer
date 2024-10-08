@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,9 +11,11 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241007235507_RenameEnums")]
+    partial class RenameEnums
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -165,11 +168,8 @@ namespace SocketServer.Migrations
 
             modelBuilder.Entity("SocketServer.Entities.Storage", b =>
                 {
-                    b.Property<int>("IdStorage")
+                    b.Property<int>("IdDevice")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("IdUser")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("StorageLimitBytes")
@@ -178,9 +178,12 @@ namespace SocketServer.Migrations
                     b.Property<long>("UsedStorageBytes")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("IdStorage");
+                    b.Property<int>("idUser")
+                        .HasColumnType("INTEGER");
 
-                    b.HasIndex("IdUser");
+                    b.HasKey("IdDevice");
+
+                    b.HasIndex("idUser");
 
                     b.ToTable("Storages");
                 });
@@ -275,12 +278,6 @@ namespace SocketServer.Migrations
 
                     b.HasKey("IdUser");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("Username")
-                        .IsUnique();
-
                     b.ToTable("Users");
                 });
 
@@ -337,7 +334,7 @@ namespace SocketServer.Migrations
                 {
                     b.HasOne("SocketServer.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("IdUser")
+                        .HasForeignKey("idUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

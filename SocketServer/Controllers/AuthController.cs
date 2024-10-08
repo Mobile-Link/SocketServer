@@ -9,13 +9,15 @@ namespace SocketServer.Controllers;
 
 public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService) : ControllerBase
 {
-    [HttpPost("login")]
+    [HttpPost]
+    [Route("login")]
     public async Task<IActionResult> Login([FromBody] Login request)
     {
         return await authService.ValidateCredentials(request.EmailOrUsername, request.Password);
     }
     
-    [HttpPost("sendCode")]
+    [HttpPost]
+    [Route("sendCode")]
     public async Task<IActionResult> SendCode(string email)
     {
         var verificationCode = verificationCodeService.GenerateVerificationCode();
@@ -27,19 +29,23 @@ public class AuthController(AuthService authService, UserService userService, Em
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
 
-    [HttpPost("verifyCode")]
+    [HttpPost]
+    [Route("verifyCode")]
     public async Task<IActionResult> VerifyCode(string email, string code)
     {
         return await verificationCodeService.ValidateVerificationCode(email, code);
     }
     
-    [HttpPost("register")]
+    [HttpPost]
+    [Route("register")]
+    
     public async Task<IActionResult> Register([FromBody] Register request)
     {
         return await userService.Register(request);
     }
     
-    [HttpPost("forgotPassword")]
+    [HttpPost]
+    [Route("forgotPassword")]
     public async Task<IActionResult> ForgotPassword(string email, UpdatePassword request)
     {
         return await userService.UpdatePassword(email, request);

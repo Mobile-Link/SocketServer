@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace SocketServer.Enums;
 
-public enum EnActionsType
+public enum EnActions
 {
     [Description("Deleted device")]
     DeletedDevice = 1,

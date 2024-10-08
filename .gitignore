@@ -7,3 +7,5 @@ riderModule.iml
 SocketServer/appsettings.json
 SocketServer.sln.DotSettings.user
 SocketServer/MobileLink.db
+SocketServer/MobileLink.db-shm
+SocketServer/MobileLink.db-wal

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,9 +11,11 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241008001109_AddUniqueConstraint")]
+    partial class AddUniqueConstraint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -148,17 +151,17 @@ namespace SocketServer.Migrations
                     b.Property<int>("EnAction")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IdDevice")
+                    b.Property<int>("FkIdUser")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IdUser")
+                    b.Property<int>("IdDevice")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("IdHistory");
 
-                    b.HasIndex("IdDevice");
+                    b.HasIndex("FkIdUser");
 
-                    b.HasIndex("IdUser");
+                    b.HasIndex("IdDevice");
 
                     b.ToTable("Histories");
                 });
@@ -316,15 +319,15 @@ namespace SocketServer.Migrations
 
             modelBuilder.Entity("SocketServer.Entities.History", b =>
                 {
-                    b.HasOne("SocketServer.Entities.Device", "Device")
+                    b.HasOne("SocketServer.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("IdDevice")
+                        .HasForeignKey("FkIdUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SocketServer.Entities.User", "User")
+                    b.HasOne("SocketServer.Entities.Device", "Device")
                         .WithMany()
-                        .HasForeignKey("IdUser")
+                        .HasForeignKey("IdDevice")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

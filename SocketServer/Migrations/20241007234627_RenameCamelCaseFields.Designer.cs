@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,9 +11,11 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241007234627_RenameCamelCaseFields")]
+    partial class RenameCamelCaseFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -60,7 +63,7 @@ namespace SocketServer.Migrations
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EnDeviceOs")
+                    b.Property<int>("EnDeviceOsType")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("IdUser")
@@ -87,7 +90,7 @@ namespace SocketServer.Migrations
                     b.ToTable("Devices");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.EntitieAction", b =>
+            modelBuilder.Entity("SocketServer.Entities.EnAction", b =>
                 {
                     b.Property<int>("IdAction")
                         .ValueGeneratedOnAdd()
@@ -102,7 +105,7 @@ namespace SocketServer.Migrations
                     b.ToTable("EnActions");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.EntitieDeviceOS", b =>
+            modelBuilder.Entity("SocketServer.Entities.EnDeviceOS", b =>
                 {
                     b.Property<int>("IdDeviceOs")
                         .ValueGeneratedOnAdd()
@@ -117,7 +120,7 @@ namespace SocketServer.Migrations
                     b.ToTable("EnDeviceOSs");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.EntitieStatus", b =>
+            modelBuilder.Entity("SocketServer.Entities.EnStatus", b =>
                 {
                     b.Property<int>("IdStatus")
                         .ValueGeneratedOnAdd()
@@ -145,7 +148,7 @@ namespace SocketServer.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EnAction")
+                    b.Property<int>("EnActionType")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("IdDevice")
@@ -165,11 +168,8 @@ namespace SocketServer.Migrations
 
             modelBuilder.Entity("SocketServer.Entities.Storage", b =>
                 {
-                    b.Property<int>("IdStorage")
+                    b.Property<int>("IdDevice")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("IdUser")
                         .HasColumnType("INTEGER");
 
                     b.Property<long>("StorageLimitBytes")
@@ -178,9 +178,12 @@ namespace SocketServer.Migrations
                     b.Property<long>("UsedStorageBytes")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("IdStorage");
+                    b.Property<int>("idUser")
+                        .HasColumnType("INTEGER");
 
-                    b.HasIndex("IdUser");
+                    b.HasKey("IdDevice");
+
+                    b.HasIndex("idUser");
 
                     b.ToTable("Storages");
                 });
@@ -235,7 +238,7 @@ namespace SocketServer.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EnStatus")
+                    b.Property<int>("EnStatusType")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("IdTransference")
@@ -274,12 +277,6 @@ namespace SocketServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("IdUser");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.HasIndex("Username")
-                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -337,7 +334,7 @@ namespace SocketServer.Migrations
                 {
                     b.HasOne("SocketServer.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("IdUser")
+                        .HasForeignKey("idUser")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
