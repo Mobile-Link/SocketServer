@@ -44,17 +44,9 @@ public class VerificationCodeService(ExpirationDbContext context, IConfiguration
         await context.SaveChangesAsync();
     }
     
-    public async Task<IActionResult> ValidateVerificationCode(string email, string code)
+    public async Task<bool> ValidateVerificationCode(string email, string code)
     {
         var storedCode = await GetVerificationCode(email);
-        
-        if (storedCode == null || storedCode?.Code != code)
-        {
-            return new BadRequestObjectResult(new {error = "Código inválido"});;
-        }
-        else
-        {
-            return new OkObjectResult(new { message = "Código validado com sucesso" });
-        }
+        return (storedCode != null && storedCode?.Code == code);
     }
 }

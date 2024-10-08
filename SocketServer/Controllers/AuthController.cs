@@ -33,7 +33,12 @@ public class AuthController(AuthService authService, UserService userService, Em
     [Route("verifyCode")]
     public async Task<IActionResult> VerifyCode(string email, string code)
     {
-        return await verificationCodeService.ValidateVerificationCode(email, code);
+        var result = await verificationCodeService.ValidateVerificationCode(email, code);
+        if (!result)
+        {
+            return new BadRequestObjectResult(new {error = "Código inválido"});;
+        }
+        return new OkObjectResult(new { message = "Código validado com sucesso" });
     }
     
     [HttpPost]

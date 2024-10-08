@@ -32,8 +32,11 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
             return new BadRequestObjectResult(new {error = "Email ou Usuário já cadastrado"});
         }
         
-        await verificationCodeService.ValidateVerificationCode(request.Email, request.Code);
-
+        var result = await verificationCodeService.ValidateVerificationCode(request.Email, request.Code);
+        if (!result)
+        {
+            return new BadRequestObjectResult(new {error = "Código inválido ou expirado"});;
+        }
         var user = new User
         {
             Email = request.Email,
