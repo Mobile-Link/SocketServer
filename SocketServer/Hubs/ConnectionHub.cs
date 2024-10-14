@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
+using SocketServer.Entities;
+using SocketServer.Services;
 
 namespace SocketServer.Hubs;
 
-public class ConnectionHub : Hub
+public class ConnectionHub(DeviceService deviceService) : Hub
 {
 
     public async Task AddToGroup(string groupName)
@@ -19,7 +21,19 @@ public class ConnectionHub : Hub
     
     public override Task OnConnectedAsync()
     {
-        AddToGroup(groupName: "Users");
+        var httpContext = Context?.GetHttpContext();
+        var deviceId = httpContext?.Request.Query["deviceId"];
+        if (deviceId.Value.Count == 0 || deviceId.Value == "0")
+        {
+            return base.OnConnectedAsync();
+        }
+        var device = deviceService.GetDeviceById(int.Parse(deviceId.Value));
+        if (device == null)
+        {
+            return base.OnConnectedAsync();
+        }
+        Context?.Features.Set<Device>(device);
+        AddToGroup(groupName: device.User.IdUser.ToString());
         
         return base.OnConnectedAsync();
     }

@@ -9,7 +9,7 @@ namespace SocketServer.Controllers;
 [ApiController]
 
 public class ConnectionController(
-    IHubContext<ConnectionHub> hubContext) : ControllerBase
+    ConnectionService connectionService) : ControllerBase
 {
     
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Entities;
 using SocketServer.Enums;
@@ -37,5 +38,12 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         expirationDbContext.DeviceTokens.Add(token);
         await expirationDbContext.SaveChangesAsync();
         return token;
+    }
+
+    public Device? GetDeviceById(int deviceId)
+    {
+        return context.Devices
+            .Include(device => device.User)
+            .FirstOrDefault(device => device.IdDevice == deviceId);
     }
 }
