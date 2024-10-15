@@ -5,8 +5,9 @@ using SocketServer.Services;
 
 namespace SocketServer.Hubs;
 
-public class ConnectionHub(DeviceService deviceService) : Hub
+public class ConnectionHub(DeviceService deviceService, TransferService transferService) : Hub
 {
+    private readonly TransferService _transferService = transferService;
 
     public async Task AddToGroup(string groupName)
     {
@@ -23,7 +24,8 @@ public class ConnectionHub(DeviceService deviceService) : Hub
     {
         var httpContext = Context?.GetHttpContext();
         var deviceId = httpContext?.Request.Query["deviceId"];
-        if (deviceId.Value.Count == 0 || deviceId.Value == "0")
+        Console.WriteLine($"Usuário {deviceId} de ID conectado!");
+        if (deviceId.Value.Count == 0)
         {
             return base.OnConnectedAsync();
         }
@@ -58,6 +60,43 @@ public class ConnectionHub(DeviceService deviceService) : Hub
     public async Task SendFile(string userId, string fileName)
     {
         await Clients.Group(userId).SendAsync("ReceiveFile", fileName);
+    }
+    
+    public async Task StartTransference(int idDevice, string filePath, long fileSize, string destinationPath)
+    {
+        var deviceDestination = deviceService.GetDeviceById(idDevice);
+        var deviceOrigin = Context.Features.Get<Device>();
+
+        if (deviceDestination == null || deviceOrigin == null)
+        {
+            return;
+        }
+        
+        var transference = await transferService.StartFileTransfer(new Transference 
+        {   
+            User = deviceOrigin.User, 
+            DeviceOrigin = deviceOrigin,
+            DeviceDestination = deviceDestination,
+            FilePath = filePath,
+            Size = fileSize,
+            DestinationPath = destinationPath
+        });
+        
+        var transferId = transference.IdTranference;
+        
+        await Clients.User(idDevice.ToString()).SendAsync("StartTransfer", transferId, filePath, fileSize);
+        
+        Console.WriteLine("Transferência iniciada");
+    }
+    
+    public async Task SendFileChunk(long idTransfer, long startByteIndex, byte[] byteArray)
+    {
+        await Clients.User("").SendAsync("SendPacket",idTransfer, startByteIndex, byteArray);
+    }
+    
+    public async Task CompleteFileTransfer(int transferId, string receiverId, string fileName, long fileSize)
+    {
+        
     }
     
     

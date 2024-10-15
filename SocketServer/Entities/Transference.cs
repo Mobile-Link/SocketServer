@@ -13,8 +13,7 @@ public class Transference
     public Device DeviceOrigin { get; set; }
     [ForeignKey("IdDeviceDestination")]
     public Device DeviceDestination { get; set; }
-    public string FileExtention { get; set; }
-    public string FileName { get; set; }
+    public string FilePath { get; set; }
     public long Size { get; set; }
     public string DestinationPath { get; set; }
 }

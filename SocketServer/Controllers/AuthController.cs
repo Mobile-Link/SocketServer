@@ -24,7 +24,7 @@ public class AuthController(AuthService authService, UserService userService, Em
         
         await verificationCodeService.StoreVerificationCode(email, verificationCode);
         
-        await emailService.SendVerificationEmailAsync(email, verificationCode);
+        // await emailService.SendVerificationEmailAsync(email, verificationCode);
 
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
