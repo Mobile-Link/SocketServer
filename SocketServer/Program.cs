@@ -39,9 +39,13 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 
 builder.Services.AddDbContext<AppDbContext>(options =>
+{
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+    );
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
+    
 
 builder.Services.AddDbContext<ExpirationDbContext>(options =>
     {
