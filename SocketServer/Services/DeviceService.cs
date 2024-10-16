@@ -43,7 +43,16 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     public Device? GetDeviceById(int deviceId)
     {
         return context.Devices
-            .Include(device => device.User)
+            .AsNoTracking()
             .FirstOrDefault(device => device.IdDevice == deviceId);
+    }
+    
+    public User? GetUserByDevice(int deviceId)
+    {
+        return context.Devices
+            .AsNoTracking()
+            .Include(device => device.User)
+            .FirstOrDefault(device => device.IdDevice == deviceId)
+            ?.User;
     }
 }

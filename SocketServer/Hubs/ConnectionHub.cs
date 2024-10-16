@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using SocketServer.Entities;
 using SocketServer.Services;
 
@@ -29,13 +30,20 @@ public class ConnectionHub(DeviceService deviceService, TransferService transfer
         {
             return base.OnConnectedAsync();
         }
+        var user = deviceService.GetUserByDevice(int.Parse(deviceId.Value));
+        if (user == null)
+        {
+            return base.OnConnectedAsync();
+        }
+        
         var device = deviceService.GetDeviceById(int.Parse(deviceId.Value));
         if (device == null)
         {
             return base.OnConnectedAsync();
         }
+        
         Context?.Features.Set<Device>(device);
-        AddToGroup(groupName: device.User.IdUser.ToString());
+        AddToGroup(groupName: user.IdUser.ToString());
         
         return base.OnConnectedAsync();
     }
@@ -65,18 +73,19 @@ public class ConnectionHub(DeviceService deviceService, TransferService transfer
     public async Task StartTransference(int idDevice, string filePath, long fileSize, string destinationPath)
     {
         var deviceDestination = deviceService.GetDeviceById(idDevice);
+        var user = deviceService.GetUserByDevice(idDevice);
         var deviceOrigin = Context.Features.Get<Device>();
-
-        if (deviceDestination == null || deviceOrigin == null)
+        
+        if (deviceDestination == null || deviceOrigin == null || user == null)
         {
             return;
         }
         
         var transference = await transferService.StartFileTransfer(new Transference 
-        {   
-            User = deviceOrigin.User, 
-            DeviceOrigin = deviceOrigin,
-            DeviceDestination = deviceDestination,
+        {
+            IdUser = user.IdUser,
+            IdDeviceOrigin = deviceOrigin.IdDevice,
+            IdDeviceDestination = deviceDestination.IdDevice,
             FilePath = filePath,
             Size = fileSize,
             DestinationPath = destinationPath
@@ -91,7 +100,7 @@ public class ConnectionHub(DeviceService deviceService, TransferService transfer
     
     public async Task SendFileChunk(long idTransfer, long startByteIndex, byte[] byteArray)
     {
-        await Clients.User("").SendAsync("SendPacket",idTransfer, startByteIndex, byteArray);
+        await Clients.User("").SendAsync("ReceivePackat",idTransfer, startByteIndex, byteArray);
     }
     
     public async Task CompleteFileTransfer(int transferId, string receiverId, string fileName, long fileSize)
