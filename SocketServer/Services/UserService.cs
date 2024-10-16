@@ -53,7 +53,7 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         
         var token = await deviceService.CreateDeviceToken(device, user);
 
-        return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token});
+        return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token, device.IdDevice});
     }
 
     public async Task<IActionResult> DeleteUser(int idUser)
