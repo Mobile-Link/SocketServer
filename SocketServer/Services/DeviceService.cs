@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Entities;
 using SocketServer.Enums;
@@ -11,7 +12,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     {
         var device = new Device()
         {
-            User = user,
+            IdUser = user.IdUser,
             IsDeleted = false,
             LastLocation = "",
             AvailableSpace = 0,
@@ -26,16 +27,32 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return device;
     }
     
-     public async Task<DeviceToken> CreateDeviceToken(Device device, User user)
+     public async Task<DeviceToken> CreateDeviceToken(Device device)
     {
         var token = new DeviceToken
         {
             IdDevice = device.IdDevice,
-            Token = GenerateCode.GenerateJwtToken(user.Email),
+            Token = GenerateCode.GenerateJwtToken(device.IdDevice.ToString()), //TODO use IdDevice as claim
             InsertionDate = DateTime.Now,
         };
         expirationDbContext.DeviceTokens.Add(token);
         await expirationDbContext.SaveChangesAsync();
         return token;
+    }
+
+    public Device? GetDeviceById(int deviceId)
+    {
+        return context.Devices
+            .AsNoTracking()
+            .FirstOrDefault(device => device.IdDevice == deviceId);
+    }
+    
+    public User? GetUserByDevice(int deviceId)
+    {
+        return context.Devices
+            .AsNoTracking()
+            .Include(device => device.User)
+            .FirstOrDefault(device => device.IdDevice == deviceId)
+            ?.User;
     }
 }

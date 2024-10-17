@@ -3,17 +3,14 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using SocketServer.ChatHub;
 using SocketServer.Data;
+using SocketServer.Hubs;
 using SocketServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddSignalR();
 builder.Services.AddScoped<TransferService>();
-builder.Services.AddScoped<ConnectionManagerService>();
-builder.Services.AddScoped<ConnectionManagerService>(sp =>
-    new ConnectionManagerService(sp.GetRequiredService<IHubContext<TransferHub>>()));
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<DeviceService>();
@@ -38,15 +35,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         builder.Configuration.Bind("JwtSettings", options));
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
 
 builder.Services.AddDbContext<AppDbContext>(options =>
+{
     options.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection")
-    ));
+    );
+    options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+});
+    
 
 builder.Services.AddDbContext<ExpirationDbContext>(options =>
     {
@@ -69,8 +68,8 @@ app.UseReDoc(c =>
     c.RoutePrefix = "redoc";
     c.SpecUrl = "/swagger/v1/swagger.json";
 });
-
-app.MapHub<TransferHub>("/transferhub");
+//TODO add auth and get idDevice from token
+app.MapHub<ConnectionHub>("/connectionhub");
 
 app.MapControllers();
 

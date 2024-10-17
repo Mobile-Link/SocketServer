@@ -13,6 +13,18 @@ public class AuthController(AuthService authService, UserService userService, Em
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] Login request)
     {
+        return await authService.Login(request);
+    }
+    [HttpPost]
+    [Route("loginCreateDevice")]
+    public async Task<IActionResult> LoginCreateDevice([FromBody] LoginCreateDevice request)
+    {
+        return await authService.LoginCreateDevice(request);
+    }
+    [HttpPost]
+    [Route("validateCredentials")]
+    public async Task<IActionResult> ValidateCredentials([FromBody] ValidateCredentials request)
+    {
         return await authService.ValidateCredentials(request.EmailOrUsername, request.Password);
     }
     

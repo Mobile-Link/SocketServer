@@ -1,52 +1,28 @@
+using Microsoft.AspNetCore.SignalR;
+using SocketServer.Data;
+using SocketServer.Entities;
+
 namespace SocketServer.Services;
 
-public class TransferService
+public class TransferService(AppDbContext context)
 {
-    private readonly string _tempDirectory = Path.Combine(Path.GetTempPath(), "FileTransferTemp");
+    private readonly AppDbContext _context = context;
     
-    public TransferService()
+    public async Task<Transference> StartFileTransfer(Transference transference)
     {
-        if (!Directory.Exists(_tempDirectory))
-        {
-            Directory.CreateDirectory(_tempDirectory);
-        }
-    }
-    
-    public async Task ReceiveFile(string fileName, byte[] chunk)
-    {
-        var filePath = Path.Combine(_tempDirectory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write);
-        await fileStream.WriteAsync(chunk);
-    }
-    
-    public async Task SaveCompleteFile(string fileName, string targetDirectory)
-    {
-        var tempFilePath = Path.Combine(_tempDirectory, fileName);
-        var targetFilePath = Path.Combine(targetDirectory, fileName);
+        _context.Transfers.Add(transference);
+        await _context.SaveChangesAsync();
         
-        if (File.Exists(tempFilePath))
-        {
-            File.Move(tempFilePath, targetFilePath);
-        }
+        return transference;
     }
 
-    public async Task DeleteTempFile(string fileName)
-    {
-        var filePath = Path.Combine(_tempDirectory, fileName);
-        if (File.Exists(filePath))
-        {
-            File.Delete(filePath);
-        }
-    }
-
-    public async Task<byte[]> GetFile(string fileName)
-    {
-        var filePath = Path.Combine(_tempDirectory, fileName);
-        if (File.Exists(filePath))
-        {
-            return await File.ReadAllBytesAsync(filePath);
-        }
-
-        return null;
-    }
+    // public async Task AddFileChunk(int transferId, byte[] chunk)
+    // {
+    //     var transfer = await _context.Transfers.FindAsync(transferId);
+    //     
+    //     if (transfer != null)
+    //     {
+    //         string chunk = 
+    //     }
+    // }
 }

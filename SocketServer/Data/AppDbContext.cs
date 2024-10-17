@@ -6,8 +6,7 @@ namespace SocketServer.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users { get; set; } // service e controller feita
-    //
+    public DbSet<User> Users { get; set; } 
     public DbSet<Device> Devices { get; set; } // TODO fazer controller e service
     //
     public DbSet<Storage> Storages { get; set; } // TODO fazer controller e service

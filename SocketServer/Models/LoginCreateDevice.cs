@@ -2,7 +2,7 @@
 
 namespace SocketServer.Models;
 
-public class Login
+public class LoginCreateDevice
 {
     [Required]
     public string EmailOrUsername { get; set; }
@@ -11,5 +11,8 @@ public class Login
     public string Password { get; set; }
         
     [Required]
-    public int IdDevice { get; set; }
+    public string DeviceName { get; set; }
+    
+    [Required]
+    public string Code { get; set; }
 }

@@ -28,7 +28,7 @@ public class VerificationCodeService(ExpirationDbContext context, IConfiguration
         await context.SaveChangesAsync();
     }
 
-    public async Task<VerificationCode?> GetVerificationCode(string email)
+    public async Task<VerificationCode?> GetVerificationCode(string email)//TODO validate username
     {
         return await context.VerificationCodes.FirstOrDefaultAsync(x => x.Email == email);
     }
