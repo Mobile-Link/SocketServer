@@ -51,7 +51,7 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         
         await verificationCodeService.DeleteVerificationCode(request.Email);
         
-        var token = await deviceService.CreateDeviceToken(device, user);
+        var token = await deviceService.CreateDeviceToken(device);
 
         return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token, device.IdDevice});
     }
@@ -118,16 +118,20 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         return await context.Users.ToListAsync();
     }
     
-    public async Task<User> GetUserByEmail(string email)
+    public async Task<User?> GetUserByEmail(string email)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Email == email);
         
         return user;
     }
     
-    public async Task<User> GetUserByUsername(string username)
+    public async Task<User?> GetUserByUsername(string username)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Username == username);
         
         return user;
     }

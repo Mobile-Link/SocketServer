@@ -68,7 +68,7 @@ app.UseReDoc(c =>
     c.RoutePrefix = "redoc";
     c.SpecUrl = "/swagger/v1/swagger.json";
 });
-
+//TODO add auth and get idDevice from token
 app.MapHub<ConnectionHub>("/connectionhub");
 
 app.MapControllers();

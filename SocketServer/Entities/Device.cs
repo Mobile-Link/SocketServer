@@ -11,6 +11,7 @@ public class Device
     public int IdDevice { get; set; }
     [ForeignKey("IdUser")]
     public User User { get; set; }
+    public int IdUser { get; set; }
     public bool IsDeleted { get; set; }
     public string LastLocation { get; set; }
     public long AvailableSpace { get; set; }

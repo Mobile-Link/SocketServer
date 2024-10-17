@@ -8,11 +8,11 @@ namespace SocketServer.Infra;
 
 public static class GenerateCode
 {
-    public static string GenerateJwtToken(string user)
+    public static string GenerateJwtToken(string idDevice)
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user),
+            new Claim(JwtRegisteredClaimNames.Sub, idDevice),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
     

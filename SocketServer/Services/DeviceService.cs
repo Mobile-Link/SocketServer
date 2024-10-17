@@ -12,7 +12,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     {
         var device = new Device()
         {
-            User = user,
+            IdUser = user.IdUser,
             IsDeleted = false,
             LastLocation = "",
             AvailableSpace = 0,
@@ -27,12 +27,12 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return device;
     }
     
-     public async Task<DeviceToken> CreateDeviceToken(Device device, User user)
+     public async Task<DeviceToken> CreateDeviceToken(Device device)
     {
         var token = new DeviceToken
         {
             IdDevice = device.IdDevice,
-            Token = GenerateCode.GenerateJwtToken(user.Email),
+            Token = GenerateCode.GenerateJwtToken(device.IdDevice.ToString()), //TODO use IdDevice as claim
             InsertionDate = DateTime.Now,
         };
         expirationDbContext.DeviceTokens.Add(token);

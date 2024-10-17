@@ -2,14 +2,12 @@
 
 namespace SocketServer.Models;
 
-public class Login
+public class ValidateCredentials
 {
     [Required]
     public string EmailOrUsername { get; set; }
     
     [Required]
     public string Password { get; set; }
-        
-    [Required]
-    public int IdDevice { get; set; }
+
 }
