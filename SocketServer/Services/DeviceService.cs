@@ -40,6 +40,13 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return token;
     }
 
+    public DeviceToken? GetDeviceToken(int deviceId)
+    {
+        return expirationDbContext.DeviceTokens
+            .AsNoTracking()
+            .FirstOrDefault(token => token.IdDevice == deviceId);
+    }
+
     public Device? GetDeviceById(int deviceId)
     {
         return context.Devices

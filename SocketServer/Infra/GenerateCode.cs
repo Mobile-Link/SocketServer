@@ -12,7 +12,7 @@ public static class GenerateCode
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, idDevice),
+            new Claim("idDevice", idDevice),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
     

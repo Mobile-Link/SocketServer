@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using SocketServer;
 using SocketServer.Data;
 using SocketServer.Hubs;
+using SocketServer.Interfaces;
 using SocketServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,7 +41,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         builder.Configuration.Bind("JwtSettings", options));
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+    .AddPolicy("Authorized", policy => policy.Requirements.Add(new CustomAuthorizationRequirement()));
+
+builder.Services.AddScoped<IAuthorizationHandler, CustomAuthorization>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

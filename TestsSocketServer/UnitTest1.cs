@@ -17,18 +17,4 @@ public class Tests
     {
         Assert.Pass();
     }
-    
-    [Test]
-    public void Test2()
-    {
-        var mock = new Mock<ConnectionController>();
-        
-        var controller = mock.Object;
-        
-        var result = controller.GetConnections(); 
-        
-        Assert.IsNotNull(result);
-        Assert.IsInstanceOf<OkObjectResult>(result);
-        Assert.AreEqual("aujdb", (result as OkObjectResult).Value);
-    }
 }

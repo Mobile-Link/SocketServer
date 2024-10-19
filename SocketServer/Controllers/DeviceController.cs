@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
 using SocketServer.Services;
@@ -7,6 +8,7 @@ namespace SocketServer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DeviceController(DeviceService deviceService, HistoryService historyService)
 {
     [HttpGet("GetUserDevices")]
