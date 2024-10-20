@@ -41,8 +41,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         builder.Configuration.Bind("JwtSettings", options));
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("Authorized", policy => policy.Requirements.Add(new CustomAuthorizationRequirement()));
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Authorized", policy => policy.Requirements.Add(new CustomAuthorizationRequirement()));
+    options.DefaultPolicy = options.GetPolicy("Authorized");
+});
 
 builder.Services.AddScoped<IAuthorizationHandler, CustomAuthorization>();
 

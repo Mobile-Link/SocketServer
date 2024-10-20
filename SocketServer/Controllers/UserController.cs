@@ -7,7 +7,7 @@ namespace SocketServer.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Policy = "Authorized")]
+[Authorize]
 public class UserController(UserService userService) : ControllerBase
 {
     [HttpGet("user")]

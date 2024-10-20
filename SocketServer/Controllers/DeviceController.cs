@@ -10,7 +10,7 @@ namespace SocketServer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "Authorized")]
+[Authorize]
 public class DeviceController(DeviceService deviceService, HistoryService historyService, IHttpContextAccessor httpContextAccessor)
 {
     [HttpGet("GetUserDevices")]
