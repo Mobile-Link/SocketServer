@@ -1,18 +1,29 @@
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
 using SocketServer.Services;
+using System.Web;
 
 namespace SocketServer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DeviceController(DeviceService deviceService, HistoryService historyService)
+[Authorize]
+public class DeviceController(DeviceService deviceService, HistoryService historyService, IHttpContextAccessor httpContextAccessor)
 {
-    // [HttpGet]
-    // public async Task<IEnumerable<Device>> GetAllDevices()
-    // {
-    //     return await _deviceService.GetAllDevices();
-    // }
+    [HttpGet("GetUserDevices")]
+    public ActionResult<List<Device>> GetUserDevices() //TODO get user from auth
+    {
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var devices = deviceService.GetUserDevices(int.Parse(idClaim.Value));
+        return devices ?? [];
+    }
     //
     // [HttpGet("{id}")]
     // public async Task<Device?> GetDeviceById(int id)
@@ -37,8 +48,8 @@ public class DeviceController(DeviceService deviceService, HistoryService histor
     // {
     //     await _deviceService.DeleteDevice(id);
     // }
-    
-    [HttpPost("device/history")]
+
+    [HttpPost("history")]
     public async Task DeviceHistory([FromBody] int deviceId)
     {
         await historyService.GetHistoryById(deviceId);

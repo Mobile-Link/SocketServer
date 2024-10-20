@@ -1,19 +1,25 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using SocketServer;
 using SocketServer.Data;
 using SocketServer.Hubs;
+using SocketServer.Interfaces;
 using SocketServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ConnectionService>();
 builder.Services.AddScoped<DeviceService>();
+builder.Services.AddScoped<HistoryService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
     builder.Configuration["MailgunApiKey"],
     builder.Configuration["MailgunDomain"]
@@ -35,8 +41,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         builder.Configuration.Bind("JwtSettings", options));
 
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Authorized", policy => policy.Requirements.Add(new CustomAuthorizationRequirement()));
+    options.DefaultPolicy = options.GetPolicy("Authorized");
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, CustomAuthorization>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

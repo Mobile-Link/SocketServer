@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Models;
 using SocketServer.Services;
@@ -6,6 +7,7 @@ namespace SocketServer.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class UserController(UserService userService) : ControllerBase
 {
     [HttpGet("user")]

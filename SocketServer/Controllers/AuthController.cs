@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Models;
 using SocketServer.Services;
@@ -26,6 +27,14 @@ public class AuthController(AuthService authService, UserService userService, Em
     public async Task<IActionResult> ValidateCredentials([FromBody] ValidateCredentials request)
     {
         return await authService.ValidateCredentials(request.EmailOrUsername, request.Password);
+    }
+    
+    [HttpGet]
+    [Route("verifyToken")]
+    [Authorize(Policy = "Authorized")]
+    public IActionResult VerifyToken()
+    {
+        return new OkResult();
     }
     
     [HttpPost]

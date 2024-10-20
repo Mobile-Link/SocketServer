@@ -22,8 +22,8 @@ public class AuthService(UserService userService, DeviceService deviceService, V
 
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
-        var token = GenerateCode.GenerateJwtToken(loginRequest.IdDevice.ToString());//TODO add idDevice on claim
-        return new OkObjectResult(new { token });
+        var token = await deviceService.CreateDeviceToken(loginRequest.IdDevice);
+        return new OkObjectResult(new { token.Token });
     }
     
     public async Task<IActionResult> LoginCreateDevice(LoginCreateDevice loginRequest)
@@ -38,7 +38,7 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
         var device = await deviceService.CreateDevice(user, loginRequest.DeviceName);
-        var token = await deviceService.CreateDeviceToken(device);
+        var token = await deviceService.CreateDeviceToken(device.IdDevice);
 
         return new OkObjectResult(new { token.Token, device.IdDevice });
     }
