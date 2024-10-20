@@ -4,18 +4,24 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
 using SocketServer.Services;
+using System.Web;
 
 namespace SocketServer.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
-public class DeviceController(DeviceService deviceService, HistoryService historyService)
+[Authorize(Policy = "Authorized")]
+public class DeviceController(DeviceService deviceService, HistoryService historyService, IHttpContextAccessor httpContextAccessor)
 {
     [HttpGet("GetUserDevices")]
-    public ActionResult<List<Device>> GetUserDevices(int userId) //TODO get user from auth
+    public ActionResult<List<Device>> GetUserDevices() //TODO get user from auth
     {
-        var devices = deviceService.GetUserDevices(userId);
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var devices = deviceService.GetUserDevices(int.Parse(idClaim.Value));
         return devices ?? [];
     }
     //

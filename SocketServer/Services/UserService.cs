@@ -51,7 +51,7 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         
         await verificationCodeService.DeleteVerificationCode(request.Email);
         
-        var token = await deviceService.CreateDeviceToken(device);
+        var token = await deviceService.CreateDeviceToken(device.IdDevice);
 
         return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token, device.IdDevice});
     }

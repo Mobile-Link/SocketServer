@@ -31,7 +31,7 @@ public class AuthController(AuthService authService, UserService userService, Em
     
     [HttpGet]
     [Route("verifyToken")]
-    [Authorize]
+    [Authorize(Policy = "Authorized")]
     public IActionResult VerifyToken()
     {
         return new OkResult();

@@ -45,11 +45,11 @@ public class CustomAuthorization(DeviceService deviceService) : AuthorizationHan
             return Task.CompletedTask;
         }
         
-        context.User.AddIdentity(new ClaimsIdentity(new []
+        var identity = new ClaimsIdentity(new []
         {
             new Claim("IdDevice", idDeviceClaim.Value)
-        }));
-        
+        });
+        context.User.AddIdentity(identity);
         context.Succeed(requirement);
         return Task.CompletedTask;
     }

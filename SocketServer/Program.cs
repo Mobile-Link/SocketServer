@@ -13,6 +13,7 @@ using SocketServer.Services;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.AddSignalR();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
