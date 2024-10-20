@@ -55,4 +55,12 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             .FirstOrDefault(device => device.IdDevice == deviceId)
             ?.User;
     }
+    
+    public List<Device>? GetUserDevices(int userId)
+    {
+        return context.Devices
+            .AsNoTracking()
+            .Where(device => device.IdUser == userId)
+            .ToList();
+    }
 }

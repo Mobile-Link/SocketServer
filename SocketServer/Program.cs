@@ -13,7 +13,9 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<ConnectionService>();
 builder.Services.AddScoped<DeviceService>();
+builder.Services.AddScoped<HistoryService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
     builder.Configuration["MailgunApiKey"],
     builder.Configuration["MailgunDomain"]

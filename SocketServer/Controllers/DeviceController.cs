@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
 using SocketServer.Services;
@@ -8,11 +9,12 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 public class DeviceController(DeviceService deviceService, HistoryService historyService)
 {
-    // [HttpGet]
-    // public async Task<IEnumerable<Device>> GetAllDevices()
-    // {
-    //     return await _deviceService.GetAllDevices();
-    // }
+    [HttpGet("GetUserDevices")]
+    public ActionResult<List<Device>> GetUserDevices(int userId) //TODO get user from auth
+    {
+        var devices = deviceService.GetUserDevices(userId);
+        return devices ?? [];
+    }
     //
     // [HttpGet("{id}")]
     // public async Task<Device?> GetDeviceById(int id)
@@ -37,8 +39,8 @@ public class DeviceController(DeviceService deviceService, HistoryService histor
     // {
     //     await _deviceService.DeleteDevice(id);
     // }
-    
-    [HttpPost("device/history")]
+
+    [HttpPost("history")]
     public async Task DeviceHistory([FromBody] int deviceId)
     {
         await historyService.GetHistoryById(deviceId);

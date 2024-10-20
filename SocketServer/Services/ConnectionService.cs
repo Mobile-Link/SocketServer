@@ -5,11 +5,15 @@ using SocketServer.Hubs;
 
 namespace SocketServer.Services;
 
-public class ConnectionService(IHubContext<ConnectionHub> hubContext)
+public class ConnectionService
 {
-    public async Task<IActionResult> GetUserConnections(long idUser)
+    public Dictionary<int, List<int>> ConnectedDevices = new Dictionary<int, List<int>>();
+    public List<int> GetConnectedDevices(int idUser)
     {
-        // hubContext.Clients.Group(idUser.ToString()).GetConnection;
-        return new OkObjectResult("");
+        if (!ConnectedDevices.TryGetValue(idUser, out var device))
+        {
+            return [];
+        }
+        return device.ToList();
     }
 }
