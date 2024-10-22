@@ -10,11 +10,31 @@ public class ConnectionService
     private Dictionary<int, List<Tuple<int,string>>> _connectedDevices = new();
     public List<int> GetConnectedDevices(int idUser)
     {
-        if (!_connectedDevices.TryGetValue(idUser, out var device))
+        if (!_connectedDevices.TryGetValue(idUser, out var devices))
         {
             return [];
         }
-        return device.Select((device) => device.Item1).ToList();
+        return devices.Select((device) => device.Item1).ToList();
+    }
+
+    public string? findDeviceConnection(int idUser, int idDevice)
+    {
+        if (!_connectedDevices.TryGetValue(idUser, out var devices))
+        {
+            return null;
+        }
+
+        return devices.FirstOrDefault((device) => device.Item1 == idDevice)?.Item2;
+    }
+    
+    public int? findDeviceByConnection(int idUser, string connectionId)
+    {
+        if (!_connectedDevices.TryGetValue(idUser, out var devices))
+        {
+            return null;
+        }
+
+        return devices.FirstOrDefault((device) => device.Item2 == connectionId)?.Item1;
     }
 
     public void Add(int idUser, int idDevice, string connectionId)
