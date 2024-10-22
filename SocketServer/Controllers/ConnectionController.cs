@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using SocketServer.Entities;
@@ -8,14 +9,25 @@ namespace SocketServer.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-
+[Authorize(Policy = "Authorized")]
 public class ConnectionController(
-    ConnectionService connectionService) : ControllerBase
+    ConnectionService connectionService, IHttpContextAccessor httpContextAccessor, DeviceService deviceService) : ControllerBase
 {
     [HttpGet("GetConnectedDevices")]
-    public ActionResult<List<int>> GetConnectedDevice(int userId)//TODO get from auth
+    public ActionResult<List<int>> GetConnectedDevice()//TODO get from auth
     {
-        var connectedDevices = connectionService.GetConnectedDevices(userId);
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var connectedDevices = connectionService.GetConnectedDevices(user.IdUser);
         return connectedDevices ?? [];
     }
 }

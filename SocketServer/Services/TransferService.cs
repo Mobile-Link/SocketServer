@@ -1,28 +1,84 @@
 using Microsoft.AspNetCore.SignalR;
 using SocketServer.Data;
 using SocketServer.Entities;
+using SocketServer.Hubs;
+using SocketServer.Models;
 
 namespace SocketServer.Services;
 
-public class TransferService(AppDbContext context)
+public class TransferService(
+    AppDbContext context,
+    DeviceService deviceService,
+    ConnectionService connectionService,
+    IHubContext<ConnectionHub> hubContext)
 {
     private readonly AppDbContext _context = context;
-    
-    public async Task<Transference> StartFileTransfer(Transference transference)
+
+    public async Task<Transference> AddFileTransfer(Transference transference)
     {
         _context.Transfers.Add(transference);
         await _context.SaveChangesAsync();
-        
+
         return transference;
     }
 
-    // public async Task AddFileChunk(int transferId, byte[] chunk)
-    // {
-    //     var transfer = await _context.Transfers.FindAsync(transferId);
-    //     
-    //     if (transfer != null)
-    //     {
-    //         string chunk = 
-    //     }
-    // }
+    public Transference? GetTransfer(int idTransference)
+    {
+        return _context.Transfers.FirstOrDefault((transference => transference.IdTranference == idTransference));
+    }
+
+    public async Task<int?> StartTransference(StartTransference request, int idDeviceOrigin)
+    {
+        var deviceDestination = deviceService.GetDeviceById(request.IdDevice);
+        var user = deviceService.GetUserByDevice(request.IdDevice);
+        if (user == null || deviceDestination == null)
+        {
+            return null;
+        }
+
+        var transference = await AddFileTransfer(new Transference
+        {
+            IdUser = user.IdUser,
+            IdDeviceOrigin = idDeviceOrigin,
+            IdDeviceDestination = deviceDestination.IdDevice,
+            FilePath = request.FilePath,
+            Size = request.FileSize,
+            DestinationPath = request.DestinationPath
+        });
+
+        var transferId = transference.IdTranference;
+        var connectionDestination = connectionService.findDeviceConnection(user.IdUser, deviceDestination.IdDevice);
+        if (connectionDestination == null)
+        {
+            //TODO get on start up of the device
+            return transferId;
+        }
+
+        await hubContext.Clients.Client(connectionDestination).SendAsync("ReceiveNewTransference", transferId, request.FilePath, request.FileSize);
+        return transferId;
+    }
+    
+    public async Task<bool> SendFileChunk(SendFileChunk request)
+    {
+        var transference = GetTransfer(request.IdTransfer);
+        if (transference == null)
+        {
+            return false;
+        }
+        var user = deviceService.GetUserByDevice(transference.IdUser);
+        if (user == null)
+        {
+            return false;
+        }
+        var connectionDestination = connectionService.findDeviceConnection(user.IdUser, transference.IdDeviceDestination);
+        //TODO record the chunk on the server
+        if (connectionDestination == null)
+        {
+            //TODO get when device connects
+            return true;
+        }
+
+        await hubContext.Clients.Client(connectionDestination).SendAsync("ReceiveFileChunk", request.IdTransfer, request.StartByteIndex, request.ByteArray);
+        return true;
+    }
 }

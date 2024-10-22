@@ -11,7 +11,7 @@ public class TransferHub(TransferService transferService) : Hub
     
     public async Task StartTransference(int idDevice, string filePath, long fileSize, string destinationPath)
     {
-        var transference = await transferService.StartFileTransfer(new Transference 
+        var transference = await transferService.AddFileTransfer(new Transference 
         {
             DeviceDestination = new Device(){IdDevice = idDevice},
             FilePath = filePath,

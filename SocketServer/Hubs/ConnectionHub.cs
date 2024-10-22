@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
@@ -7,57 +8,46 @@ using SocketServer.Services;
 
 namespace SocketServer.Hubs;
 
-public class ConnectionHub(DeviceService deviceService, TransferService transferService, ConnectionService connectionService) : Hub
+[Authorize(Policy = "Authorized")]
+public class ConnectionHub(
+    DeviceService deviceService,
+    TransferService transferService,
+    ConnectionService connectionService) : Hub
 {
-    private readonly TransferService _transferService = transferService;
-
     public async Task AddToGroup(int idUser, int idDevice)
     {
         Console.WriteLine($"Usuário {idUser} conectou o dispositivo {idDevice}!");
 
 
-        if (connectionService.ConnectedDevices.ContainsKey(idUser))
-        {
-            connectionService.ConnectedDevices[idUser].Add(idDevice);
-        }
-        else
-        {
-            connectionService.ConnectedDevices[idUser] = new List<int>()
-            {
-                idDevice
-            };
-        }
+        connectionService.Add(idUser, idDevice, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, idUser.ToString());
     }
 
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
-        var httpContext = Context?.GetHttpContext();
-        var deviceIdQuery = httpContext?.Request.Query["deviceId"];
-        Console.WriteLine($"Usuário {deviceIdQuery} de ID conectado!");
-        if (deviceIdQuery.Value.Count == 0)
+        var idDeviceClaim = Context.User.FindFirst(claim => claim.Type == "IdDevice");
+        if (idDeviceClaim == null)
         {
-            return base.OnConnectedAsync();
+            return;
         }
 
-        var deviceId = int.Parse(deviceIdQuery.Value);
+        Console.WriteLine($"Usuário {idDeviceClaim.Value} de ID conectado!");
+        var deviceId = int.Parse(idDeviceClaim.Value);
         var user = deviceService.GetUserByDevice(deviceId);
         if (user == null)
         {
-            return base.OnConnectedAsync();
+            return;
         }
 
         var device = deviceService.GetDeviceById(deviceId);
         if (device == null)
         {
-            return base.OnConnectedAsync();
+            return;
         }
 
         device.IdUser = user.IdUser;
-        Context?.Features.Set<Tuple<int, int>>(new Tuple<int, int>(user.IdUser, deviceId));
-        AddToGroup(user.IdUser, deviceId);
-
-        return base.OnConnectedAsync();
+        await AddToGroup(user.IdUser, deviceId);
+        await base.OnConnectedAsync();
     }
 
     private async Task RemoveFromGroup()
@@ -68,19 +58,22 @@ public class ConnectionHub(DeviceService deviceService, TransferService transfer
         {
             return;
         }
-        var ids = Context.Features.Get<Tuple<int, int>>();
-        if (ids == null)
+
+        var idDeviceClaim = Context.User.FindFirst(claim => claim.Type == "IdDevice");
+        if (idDeviceClaim == null)
         {
             return;
         }
 
-        if (!connectionService.ConnectedDevices.ContainsKey(ids.Item1))
+        var user = deviceService.GetUserByDevice(int.Parse(idDeviceClaim.Value));
+        if (user == null)
         {
             return;
         }
-        Console.WriteLine($"Dispositivo {ids.Item1} do usuário {ids.Item2}");
-        connectionService.ConnectedDevices[ids.Item1].RemoveAll(item => item == ids.Item2);
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, ids.Item1.ToString());
+
+        connectionService.Remove(user.IdUser, Context.ConnectionId);
+        Console.WriteLine($"Dispositivo {user.IdUser} do usuário {idDeviceClaim.Value}");
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.IdUser.ToString());
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)
@@ -94,39 +87,7 @@ public class ConnectionHub(DeviceService deviceService, TransferService transfer
         await Clients.Group(userId).SendAsync("ReceiveFile", fileName);
     }
 
-    public async Task StartTransference(int idDevice, string filePath, long fileSize, string destinationPath)
-    {
-        var deviceDestination = deviceService.GetDeviceById(idDevice);
-        var user = deviceService.GetUserByDevice(idDevice);
-        var deviceOrigin = Context.Features.Get<Device>();
 
-        if (deviceDestination == null || deviceOrigin == null || user == null)
-        {
-            return;
-        }
-
-        var transference = await transferService.StartFileTransfer(new Transference
-        {
-            IdUser = user.IdUser,
-            IdDeviceOrigin = deviceOrigin.IdDevice,
-            IdDeviceDestination = deviceDestination.IdDevice,
-            FilePath = filePath,
-            Size = fileSize,
-            DestinationPath = destinationPath
-        });
-
-        var transferId = transference.IdTranference;
-        var device = Context?.Features.Get<Device>();
-
-        await Clients.User(idDevice.ToString()).SendAsync("StartTransfer", transferId, filePath, fileSize);
-
-        Console.WriteLine("Transferência iniciada");
-    }
-
-    public async Task SendFileChunk(long idTransfer, long startByteIndex, byte[] byteArray)
-    {
-        await Clients.User("").SendAsync("ReceivePackat", idTransfer, startByteIndex, byteArray);
-    }
 
     public async Task CompleteFileTransfer(int transferId, string receiverId, string fileName, long fileSize)
     {
