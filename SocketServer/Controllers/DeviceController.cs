@@ -21,7 +21,12 @@ public class DeviceController(DeviceService deviceService, HistoryService histor
         {
             return new StatusCodeResult(500);
         }
-        var devices = deviceService.GetUserDevices(int.Parse(idClaim.Value));
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var devices = deviceService.GetUserDevices(user.IdUser);
         return devices ?? [];
     }
     //
