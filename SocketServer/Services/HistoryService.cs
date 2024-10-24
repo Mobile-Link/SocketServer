@@ -23,7 +23,7 @@ public class HistoryService(AppDbContext context)
         var history = new History
         {
             IdDevice = idDevice,
-            IdAction = (int)enAction,
+            EnAction = enAction,
             Description = description,
             Date = DateTime.Now,
             IdUser = idUser

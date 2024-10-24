@@ -14,9 +14,8 @@ public class History
     [ForeignKey("IdDevice")]
     public Device Device { get; set; }
     public int IdDevice { get; set; }
-    [ForeignKey("IdAction")]
-    public EntitieAction EnAction { get; set; }
-    public int IdAction { get; set; }
+    [ForeignKey("EnActions")]
+    public EnActions EnAction { get; set; }
     public string Description { get; set; }
     public DateTime Date { get; set; }
     
