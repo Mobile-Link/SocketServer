@@ -11,7 +11,6 @@ namespace SocketServer.Hubs;
 [Authorize(Policy = "Authorized")]
 public class ConnectionHub(
     DeviceService deviceService,
-    TransferService transferService,
     ConnectionService connectionService) : Hub
 {
     public async Task AddToGroup(int idUser, int idDevice)
@@ -20,6 +19,8 @@ public class ConnectionHub(
 
 
         connectionService.Add(idUser, idDevice, Context.ConnectionId);
+        await Clients.OthersInGroup(idUser.ToString()).SendAsync("UpdateConnectedDevices",
+            connectionService.GetConnectedDevices(idUser));
         await Groups.AddToGroupAsync(Context.ConnectionId, idUser.ToString());
     }
 
@@ -72,7 +73,8 @@ public class ConnectionHub(
         }
 
         connectionService.Remove(user.IdUser, Context.ConnectionId);
-        Console.WriteLine($"Dispositivo {user.IdUser} do usuário {idDeviceClaim.Value}");
+        await Clients.OthersInGroup(user.IdUser.ToString()).SendAsync("UpdateConnectedDevices",
+            connectionService.GetConnectedDevices(user.IdUser));
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.IdUser.ToString());
     }
 
@@ -86,7 +88,6 @@ public class ConnectionHub(
     {
         await Clients.Group(userId).SendAsync("ReceiveFile", fileName);
     }
-
 
 
     public async Task CompleteFileTransfer(int transferId, string receiverId, string fileName, long fileSize)
