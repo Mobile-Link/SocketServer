@@ -6,7 +6,7 @@ using SocketServer.Infra;
 
 namespace SocketServer.Services;
 
-public class DeviceService(AppDbContext context, ExpirationDbContext expirationDbContext)
+public class DeviceService(AppDbContext context, ExpirationDbContext expirationDbContext, HistoryService historyService)
 {
     public async Task<Device> CreateDevice(User user, string deviceName)
     {
@@ -52,6 +52,15 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return context.Devices
             .AsNoTracking()
             .FirstOrDefault(device => device.IdDevice == deviceId);
+    }
+    
+    public string? GetCreateDateDevice( int idDevice)
+    {
+        var device= context.Devices
+            .AsNoTracking()
+            .FirstOrDefault(device => device.IdDevice == idDevice);
+
+        return device?.CreationDate.ToString("dd-MM-yyyy HH:mm:ss");
     }
     
     public User? GetUserByDevice(int deviceId)

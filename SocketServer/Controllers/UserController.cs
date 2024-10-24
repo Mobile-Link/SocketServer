@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SocketServer.Entities;
 using SocketServer.Models;
 using SocketServer.Services;
 
@@ -8,7 +9,7 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class UserController(UserService userService) : ControllerBase
+public class UserController(UserService userService, IHttpContextAccessor httpContextAccessor, DeviceService deviceService ) : ControllerBase
 {
     [HttpGet("user")]
     public async Task<IActionResult> GetUser()
@@ -23,10 +24,17 @@ public class UserController(UserService userService) : ControllerBase
         return await userService.DeleteUser(idUser);
     }
     
-    [HttpPut("user/{IdUser}")]
-    public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
+    [HttpPut("user")]
+    public async Task<IActionResult> UpdateUser(UpdateUser request)
     {
-        return await userService.UpdateUser(idUser, request);
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        
+        return await userService.UpdateUser((int.Parse(idClaim.Value)), request);
     }
     
     [HttpPut ("user/{IdUser}/password")]
@@ -35,3 +43,4 @@ public class UserController(UserService userService) : ControllerBase
         return await userService.UpdatePassword(email, request);
     }
 }
+

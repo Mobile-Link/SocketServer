@@ -10,10 +10,13 @@ public class History
     public int IdHistory { get; set; }
     [ForeignKey("IdUser")]
     public User User { get; set; }
+    public int IdUser { get; set; }
     [ForeignKey("IdDevice")]
     public Device Device { get; set; }
-    [ForeignKey("EnAction")]
-    public EnActions EnAction { get; set; }
+    public int IdDevice { get; set; }
+    [ForeignKey("IdAction")]
+    public EntitieAction EnAction { get; set; }
+    public int IdAction { get; set; }
     public string Description { get; set; }
     public DateTime Date { get; set; }
     
