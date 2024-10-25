@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Entities;
@@ -24,6 +25,14 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         };
         await context.Devices.AddAsync(device);
         await context.SaveChangesAsync();
+
+        await historyService.CreateHistory(
+            EnActions.AddedDevice,
+            $"Novo dispositivo adicionado ao usuário {user.Username}",
+            device.IdDevice,
+            user.IdUser
+        );
+        
         return device;
     }
     
@@ -54,15 +63,6 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             .FirstOrDefault(device => device.IdDevice == deviceId);
     }
     
-    public string? GetCreateDateDevice( int idDevice)
-    {
-        var device= context.Devices
-            .AsNoTracking()
-            .FirstOrDefault(device => device.IdDevice == idDevice);
-
-        return device?.CreationDate.ToString("dd-MM-yyyy HH:mm:ss");
-    }
-    
     public User? GetUserByDevice(int deviceId)
     {
         return context.Devices
@@ -78,5 +78,48 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             .AsNoTracking()
             .Where(device => device.IdUser == userId)
             .ToList();
+    }
+    
+    public async Task<IActionResult> DeleteDeviceByUser(int deviceId)
+    {
+        var device = GetDeviceById(deviceId);
+        if (device == null)
+        {
+            return new NotFoundObjectResult(new {error = "Dispositivo não encontrado"});
+        }
+        
+        device.IsDeleted = true;
+        context.Devices.Update(device);
+        context.SaveChanges();
+        
+        await historyService.CreateHistory(
+            EnActions.DeletedDevice,
+            $"Dispositivo {device.Name} do usuário {device.User.Username} deletado",
+            deviceId,
+            device.IdUser
+        );
+        
+        return new OkObjectResult(new {message = "Dispositivo deletado com sucesso"});
+    }
+    
+    public async Task<IActionResult> UpdateDevice(int deviceId)
+    {
+        var device = GetDeviceById(deviceId);
+        if (device == null)
+        {
+            return new NotFoundObjectResult(new {error = "Dispositivo não encontrado"});
+        }
+        
+        context.Devices.Update(device);
+        await context.SaveChangesAsync();
+        
+        await historyService.CreateHistory(
+            EnActions.ChangedDevice,
+            $"O nome do dispositivo foi modificado para {device.Name} ",
+            deviceId,
+            device.IdUser
+        );
+        
+        return new OkObjectResult(new {message = "Dispositivo atualizado com sucesso"});
     }
 }
