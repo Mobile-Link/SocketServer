@@ -38,6 +38,12 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     
      public async Task<DeviceToken> CreateDeviceToken(int idDevice)
     {
+
+        var existingToken = GetDeviceToken(idDevice);
+        if (existingToken != null)
+        {
+            await DeleteDeviceTokens(idDevice);
+        }
         var token = new DeviceToken
         {
             IdDevice = idDevice,
@@ -47,6 +53,16 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         expirationDbContext.DeviceTokens.Add(token);
         await expirationDbContext.SaveChangesAsync();
         return token;
+    }
+
+    public async Task DeleteDeviceTokens(int idDevice)
+    {
+        var tokens = expirationDbContext.DeviceTokens.Where(token => token.IdDevice == idDevice);
+        foreach (var token in tokens)
+        {
+            expirationDbContext.Remove(token);
+            await expirationDbContext.SaveChangesAsync();
+        }
     }
 
     public DeviceToken? GetDeviceToken(int deviceId)

@@ -89,7 +89,7 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         context.Users.Update(user);
         
         await context.SaveChangesAsync();
-
+        context.Entry(user).State = EntityState.Detached;
         await historyService.CreateHistory(
             EnActions.ChangedUser,
             $"O usuário modificou o nome para {user.Username}",
