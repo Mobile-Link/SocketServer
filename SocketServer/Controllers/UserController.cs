@@ -12,12 +12,28 @@ namespace SocketServer.Controllers;
 public class UserController(UserService userService, IHttpContextAccessor httpContextAccessor, DeviceService deviceService ) : ControllerBase
 {
     [HttpGet("getUsers")]
-    public async Task<IActionResult> GetUser()
+    public async Task<IActionResult> GetUsers()
     {
         var users = await userService.GetUsers();
         return Ok(users);
     }
-    
+
+    [HttpGet("getUser")]
+    public async Task<IActionResult> GetUser()
+    {
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null) {
+            return NotFound();       
+        }
+        return Ok(user);
+    }
+
     [HttpDelete("deleteUser")]
     public async Task<IActionResult> DeleteUser()
     {
