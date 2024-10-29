@@ -12,7 +12,8 @@ public class TransferService(
     AppDbContext context,
     DeviceService deviceService,
     ConnectionService connectionService,
-    IHubContext<ConnectionHub> hubContext)
+    IHubContext<ConnectionHub> hubContext, 
+    IConfiguration configuration)
 {
     private readonly AppDbContext _context = context;
 
@@ -46,7 +47,16 @@ public class TransferService(
 
     public Transference? GetTransfer(int idTransference)
     {
-        return _context.Transfers.FirstOrDefault((transference => transference.IdTranference == idTransference));
+        return _context.Transfers
+            .AsNoTracking()
+            .FirstOrDefault((transference => transference.IdTranference == idTransference));
+    }
+    
+    public List<TransferenceChunk> GetTransferChunks(int idTransference)
+    {
+        return _context.TransferenceChunks
+            .AsNoTracking()
+            .Where((chunk => chunk.IdTransference == idTransference)).ToList();
     }
 
     public bool CheckAllChunksOnStatus(int idTransference, EnChunkStatus chunkStatus)
@@ -122,6 +132,12 @@ public class TransferService(
         
         transferenceChunk.EnChunkStatus = EnChunkStatus.Received;
         await UpdateTransferenceChunk(transferenceChunk);
+
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTranference.ToString());
+        var chunkPath = Path.Combine(directory, $"{request.StartByteIndex}.bin");
+        Directory.CreateDirectory(directory);
+        await System.IO.File.WriteAllBytesAsync(chunkPath, request.ByteArray);
+
         
         var connectionDestination =
             connectionService.findDeviceConnection(user.IdUser, transference.IdDeviceDestination);
@@ -131,14 +147,15 @@ public class TransferService(
             return true;
         }
 
-        await hubContext.Clients.Client(connectionDestination).SendAsync("ReceiveFileChunk", request.IdTransfer,
-            request.StartByteIndex, request.ByteArray);
-
         if (CheckAllChunksOnStatus(transference.IdTranference, EnChunkStatus.Received))
         {
             transference.EnStatus = EnStatus.InCloud;
             await UpdateTransference(transference);
         }
+        
+        await hubContext.Clients.Client(connectionDestination).SendAsync("ReceiveFileChunk", request.IdTransfer,
+            request.StartByteIndex, request.ByteArray);
+        
         return true;
     }
 }

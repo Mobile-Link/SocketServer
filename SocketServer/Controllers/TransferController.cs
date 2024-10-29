@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using SocketServer.Enums;
 using SocketServer.Hubs;
 using SocketServer.Models;
 using SocketServer.Services;
@@ -39,5 +40,40 @@ public class TransferController(
             return StatusCode(500);
         }
         return new OkResult();
+    }
+    
+    [HttpGet("GetTransfer")]
+    public async Task<ActionResult> GetTransfer([FromQuery] int idTransfer)
+    {
+        var transfer = transferService.GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return StatusCode(404);
+        }
+        return new OkObjectResult(transfer);
+    }
+    
+    [HttpGet("GetTransferChunks")]
+    public async Task<ActionResult> GetTransferChunks([FromQuery] int idTransfer)
+    {
+        var transfer = transferService.GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return StatusCode(404);
+        }
+        var chunks = transferService.GetTransferChunks(idTransfer);
+        return new OkObjectResult(chunks);
+    }
+    
+    [HttpGet("GetTransferChunks")]
+    public async Task<ActionResult> CheckTransferChunksCompletion([FromQuery] int idTransfer)
+    {
+        var transfer = transferService.GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return StatusCode(404);
+        }
+        var completed = transferService.GetTransferChunks(idTransfer);
+        return new OkObjectResult(completed);
     }
 }
