@@ -4,10 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using SocketServer.Data;
 using SocketServer.Models;
 using SocketServer.Entities;
+using SocketServer.Enums;
 
 namespace SocketServer.Services;
 
-public class UserService(AppDbContext context, VerificationCodeService verificationCodeService, DeviceService deviceService)
+public class UserService(AppDbContext context, VerificationCodeService verificationCodeService, DeviceService deviceService, HistoryService historyService)
 {
     public async Task<IActionResult> Register(Register request)
     {
@@ -56,9 +57,9 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token, device.IdDevice});
     }
 
-    public async Task<IActionResult> DeleteUser(int idUser)
+    public async Task<IActionResult> DeleteUser(int idDevice)
     {
-        var user = await context.Users.FindAsync(idUser);
+        var user = deviceService.GetUserByDevice(idDevice);
         
         if (user == null)
         {
@@ -71,9 +72,9 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         return new OkObjectResult(new {message = "Usuário removido com sucesso"});
     }
     
-    public async Task<IActionResult> UpdateUser(int idUser, UpdateUser request)
+    public async Task<IActionResult> UpdateUser(int idDevice, UpdateUser request)
     {
-        var user = await context.Users.FindAsync(idUser);
+        var user = deviceService.GetUserByDevice(idDevice);
         
         if (user == null)
         {
@@ -85,20 +86,23 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
             user.Username = request.Username;
         }
 
-        if (!string.IsNullOrEmpty(request.Email))
-        {
-            user.Email = request.Email;
-        }
-
         context.Users.Update(user);
+        
         await context.SaveChangesAsync();
+        context.Entry(user).State = EntityState.Detached;
+        await historyService.CreateHistory(
+            EnActions.ChangedUser,
+            $"O usuário modificou o nome para {user.Username}",
+            idDevice,
+            user.IdUser
+        );
         
         return new OkObjectResult(new { message = "Usuário atualizado com sucesso" });
     }
     
-    public async Task<IActionResult> UpdatePassword(string email, UpdatePassword request)
+    public async Task<IActionResult> UpdatePassword(int idDevice, UpdatePassword request)
     {
-        var user = await context.Users.FindAsync(email);
+        var user = deviceService.GetUserByDevice(idDevice);
         
         if (user == null)
         {
@@ -109,6 +113,13 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         
         context.Users.Update(user);
         await context.SaveChangesAsync();
+        
+        await historyService.CreateHistory(
+            EnActions.ChangedPassword,
+            $"Senha do usuário {user.Username} alterada",
+            idDevice,
+            user.IdUser
+        );
         
         return new OkObjectResult(new {message = "Senha atualizada com sucesso"});
     }

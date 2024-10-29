@@ -7,11 +7,9 @@ using SocketServer.Entities;
 using SocketServer.Services;
 
 namespace SocketServer.Hubs;
-
-[Authorize(Policy = "Authorized")]
+[Authorize]
 public class ConnectionHub(
     DeviceService deviceService,
-    TransferService transferService,
     ConnectionService connectionService) : Hub
 {
     public async Task AddToGroup(int idUser, int idDevice)
@@ -20,6 +18,8 @@ public class ConnectionHub(
 
 
         connectionService.Add(idUser, idDevice, Context.ConnectionId);
+        await Clients.OthersInGroup(idUser.ToString()).SendAsync("UpdateConnectedDevices",
+            connectionService.GetConnectedDevices(idUser));
         await Groups.AddToGroupAsync(Context.ConnectionId, idUser.ToString());
     }
 
@@ -72,7 +72,8 @@ public class ConnectionHub(
         }
 
         connectionService.Remove(user.IdUser, Context.ConnectionId);
-        Console.WriteLine($"Dispositivo {user.IdUser} do usuário {idDeviceClaim.Value}");
+        await Clients.OthersInGroup(user.IdUser.ToString()).SendAsync("UpdateConnectedDevices",
+            connectionService.GetConnectedDevices(user.IdUser));
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, user.IdUser.ToString());
     }
 
@@ -88,66 +89,7 @@ public class ConnectionHub(
     }
 
 
-
     public async Task CompleteFileTransfer(int transferId, string receiverId, string fileName, long fileSize)
     {
     }
-
-
-    // public override Task OnConnectedAsync()
-    // {
-    //     var connectionId = Context.ConnectionId;
-    //     
-    //     Console.WriteLine($"User {connectionId} conectado");
-    //     _connectionManagerService.AddUsers(connectionId);
-    //     
-    //     return base.OnConnectedAsync();
-    // }
-    //
-    // public override Task OnDisconnectedAsync(Exception? exception)
-    // {
-    //     var connectionId = Context.ConnectionId;
-    //     
-    //     Console.WriteLine($"User {connectionId} desconectado");
-    //     _connectionManagerService.RemoveUser(connectionId);
-    //     
-    //     return base.OnDisconnectedAsync(exception);
-    // }
-    // public async Task SendFile(string userId, string fileName, byte[] chunk)
-    // {
-    //     if (!_transferringFiles.ContainsKey(userId))
-    //     {
-    //         _transferringFiles[userId] = new List<string>();
-    //     }
-    //     if (!_transferringFiles[userId].Contains(fileName))
-    //     {
-    //         _transferringFiles[userId].Add(fileName);
-    //     }
-    //         
-    //     await Clients.User(userId).SendAsync("ReceiveFileChunk", fileName, chunk);
-    //     
-    //     Console.WriteLine($"User {userId} enviou o arquivo {fileName}");
-    // }
-    //
-    // public async Task CompleteTransfer(string userId, string fileName, long fileSize)
-    // {
-    //     if(_transferringFiles.ContainsKey(userId) && _transferringFiles[userId].Contains(fileName))
-    //     {
-    //         _transferringFiles[userId].Remove(fileName);
-    //     }
-    //         
-    //     await Clients.User(userId).SendAsync("FileTransferComplete", fileName, fileSize);
-    //     
-    //     await _transferService.DeleteTempFile(fileName);
-    // }
-    //     
-    // public async Task StartTransfer(string userId, string fileName, long fileSize)
-    // {
-    //     await Clients.User(userId).SendAsync("StartFileTransfer", fileName, fileSize);
-    // }
-    //
-    // public async Task ReceiveFile(string connectionId,string fileName, byte[] chunk)
-    // {
-    //     await _transferService.ReceiveFile(fileName, chunk);
-    // }
 }

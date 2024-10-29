@@ -11,7 +11,7 @@ namespace SocketServer.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class DeviceController(DeviceService deviceService, HistoryService historyService, IHttpContextAccessor httpContextAccessor)
+public class DeviceController(DeviceService deviceService, IHttpContextAccessor httpContextAccessor)
 {
     [HttpGet("GetUserDevices")]
     public ActionResult<List<Device>> GetUserDevices() //TODO get user from auth
@@ -21,37 +21,44 @@ public class DeviceController(DeviceService deviceService, HistoryService histor
         {
             return new StatusCodeResult(500);
         }
-        var devices = deviceService.GetUserDevices(int.Parse(idClaim.Value));
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var devices = deviceService.GetUserDevices(user.IdUser);
         return devices ?? [];
     }
-    //
-    // [HttpGet("{id}")]
-    // public async Task<Device?> GetDeviceById(int id)
-    // {
-    //     return await _deviceService.GetDeviceById(id);
-    // }
-    //
-    // [HttpPost]
-    // public async Task<Device> CreateDevice(Device device)
-    // {
-    //     return await _deviceService.CreateDevice(device);
-    // }
-    //
-    // [HttpPut("{id}")]
-    // public async Task<Device> UpdateDevice(int id, Device device)
-    // {
-    //     return await _deviceService.UpdateDevice(id, device);
-    // }
-    //
-    // [HttpDelete("{id}")]
-    // public async Task DeleteDevice(int id)
-    // {
-    //     await _deviceService.DeleteDevice(id);
-    // }
-
-    [HttpPost("history")]
-    public async Task DeviceHistory([FromBody] int deviceId)
+    
+    [HttpDelete("DeleteDevice")]
+    public async Task<IActionResult> DeleteDevice(int deviceId)
     {
-        await historyService.GetHistoryById(deviceId);
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var device = deviceService.GetDeviceById(deviceId);
+        if (device == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        if (device.IdUser != user.IdUser)
+        {
+            return new StatusCodeResult(500);
+        }
+        await deviceService.DeleteDeviceByUser(deviceId);
+        
+        return new OkObjectResult(new {message = "Dispositivo deletado com sucesso"});
     }
+    
+    // [HttpPost("DeleteDevice")]
+    // public async Task<IActionResult> DeleteDevice()
+    // {
+    // }
 }

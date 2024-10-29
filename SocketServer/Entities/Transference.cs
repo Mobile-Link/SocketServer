@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using SocketServer.Enums;
 
 namespace SocketServer.Entities;
 
@@ -20,4 +21,9 @@ public class Transference
     public string FilePath { get; set; }
     public long Size { get; set; }
     public string DestinationPath { get; set; }
+    [ForeignKey("EnStatus")]
+    public EnStatus EnStatus { get; set; }
+    public DateTime CreationDate { get; set; }
+    public DateTime UpdateDate { get; set; }
+
 }

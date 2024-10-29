@@ -8,7 +8,7 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 
-public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService) : ControllerBase
+public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService, IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
     [HttpPost]
     [Route("login")]
@@ -70,10 +70,17 @@ public class AuthController(AuthService authService, UserService userService, Em
         return await userService.Register(request);
     }
     
-    [HttpPost]
-    [Route("forgotPassword")]
-    public async Task<IActionResult> ForgotPassword(string email, UpdatePassword request)
-    {
-        return await userService.UpdatePassword(email, request);
-    }
+    // [HttpPost]
+    // [Route("forgotPassword")]
+    // public async Task<IActionResult> ForgotPassword(UpdatePassword request)
+    // {
+    //     var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+    //     
+    //     if (idClaim == null)
+    //     {
+    //         return new StatusCodeResult(500);
+    //     }
+    //     
+    //     return await userService.UpdatePassword((int.Parse(idClaim.Value)), request);
+    // }
 }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,9 +11,11 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241024022829_AddChangeHistory")]
+    partial class AddChangeHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -100,21 +103,6 @@ namespace SocketServer.Migrations
                     b.HasKey("IdAction");
 
                     b.ToTable("EnActions");
-                });
-
-            modelBuilder.Entity("SocketServer.Entities.EntitieChunkStatus", b =>
-                {
-                    b.Property<int>("IdChunkStatus")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("IdChunkStatus");
-
-                    b.ToTable("EnChunkStatuses");
                 });
 
             modelBuilder.Entity("SocketServer.Entities.EntitieDeviceOS", b =>
@@ -206,15 +194,9 @@ namespace SocketServer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("DestinationPath")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("EnStatus")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("FilePath")
                         .IsRequired()
@@ -232,9 +214,6 @@ namespace SocketServer.Migrations
                     b.Property<long>("Size")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("UpdateDate")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("IdTranference");
 
                     b.HasIndex("IdDeviceDestination");
@@ -246,26 +225,30 @@ namespace SocketServer.Migrations
                     b.ToTable("Transfers");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.TransferenceChunk", b =>
+            modelBuilder.Entity("SocketServer.Entities.TransferenceLog", b =>
                 {
-                    b.Property<int>("IdTranferenceChunck")
+                    b.Property<int>("IdTransferenceLog")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("EnChunkStatus")
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EnStatus")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("IdTransference")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("startByteIndex")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("ServePath")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.HasKey("IdTranferenceChunck");
+                    b.HasKey("IdTransferenceLog");
 
                     b.HasIndex("IdTransference");
 
-                    b.ToTable("TransferenceChunks");
+                    b.ToTable("TransferenceLogs");
                 });
 
             modelBuilder.Entity("SocketServer.Entities.User", b =>
@@ -387,7 +370,7 @@ namespace SocketServer.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SocketServer.Entities.TransferenceChunk", b =>
+            modelBuilder.Entity("SocketServer.Entities.TransferenceLog", b =>
                 {
                     b.HasOne("SocketServer.Entities.Transference", "Transference")
                         .WithMany()
