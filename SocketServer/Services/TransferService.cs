@@ -49,7 +49,7 @@ public class TransferService(
     {
         return _context.Transfers
             .AsNoTracking()
-            .FirstOrDefault((transference => transference.IdTranference == idTransference));
+            .FirstOrDefault((transference => transference.IdTransference == idTransference));
     }
     
     public List<TransferenceChunk> GetTransferChunks(int idTransference)
@@ -83,7 +83,7 @@ public class TransferService(
             DestinationPath = request.DestinationPath
         });
 
-        var transferId = transference.IdTranference;
+        var transferId = transference.IdTransference;
 
         var totalChunks = (int)Math.Ceiling((double)request.FileSize / (1024 * 1024));
         for (var index = 0; index < totalChunks; index++)
@@ -92,7 +92,7 @@ public class TransferService(
             {
                 IdTransference = transferId,
                 EnChunkStatus = EnChunkStatus.Pending,
-                startByteIndex = index * (1024 * 1024)
+                StartByteIndex = index * (1024 * 1024)
             });
         }
 
@@ -122,7 +122,7 @@ public class TransferService(
         }
 
         var transferenceChunk = await _context.TransferenceChunks.FirstOrDefaultAsync((chunk) =>
-            chunk.IdTransference == request.IdTransfer && chunk.startByteIndex ==
+            chunk.IdTransference == request.IdTransfer && chunk.StartByteIndex ==
             request.StartByteIndex);
         if (transferenceChunk == null)
         {
@@ -133,7 +133,7 @@ public class TransferService(
         transferenceChunk.EnChunkStatus = EnChunkStatus.Received;
         await UpdateTransferenceChunk(transferenceChunk);
 
-        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTranference.ToString());
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTransference.ToString());
         var chunkPath = Path.Combine(directory, $"{request.StartByteIndex}.bin");
         Directory.CreateDirectory(directory);
         await System.IO.File.WriteAllBytesAsync(chunkPath, request.ByteArray);
@@ -147,7 +147,7 @@ public class TransferService(
             return true;
         }
 
-        if (CheckAllChunksOnStatus(transference.IdTranference, EnChunkStatus.Received))
+        if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
         {
             transference.EnStatus = EnStatus.InCloud;
             await UpdateTransference(transference);

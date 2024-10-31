@@ -202,7 +202,7 @@ namespace SocketServer.Migrations
 
             modelBuilder.Entity("SocketServer.Entities.Transference", b =>
                 {
-                    b.Property<int>("IdTranference")
+                    b.Property<int>("IdTransference")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -235,7 +235,7 @@ namespace SocketServer.Migrations
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("IdTranference");
+                    b.HasKey("IdTransference");
 
                     b.HasIndex("IdDeviceDestination");
 
@@ -248,7 +248,7 @@ namespace SocketServer.Migrations
 
             modelBuilder.Entity("SocketServer.Entities.TransferenceChunk", b =>
                 {
-                    b.Property<int>("IdTranferenceChunck")
+                    b.Property<int>("IdTransferenceChunk")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -258,10 +258,10 @@ namespace SocketServer.Migrations
                     b.Property<int>("IdTransference")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("startByteIndex")
+                    b.Property<long>("StartByteIndex")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("IdTranferenceChunck");
+                    b.HasKey("IdTransferenceChunk");
 
                     b.HasIndex("IdTransference");
 

@@ -19,7 +19,7 @@ public class TransferHub(TransferService transferService) : Hub
             DestinationPath = destinationPath
         });
         
-        var transferId = transference.IdTranference;
+        var transferId = transference.IdTransference;
         
         await Clients.User(idDevice.ToString()).SendAsync("StartTransfer", transferId, filePath, fileSize);
         

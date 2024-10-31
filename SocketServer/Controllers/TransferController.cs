@@ -15,7 +15,7 @@ public class TransferController(
     TransferService transferService,
     IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
-    [HttpPost("StartTransference")]
+    [HttpPost("startTransference")]
     public async Task<ActionResult<int?>> StartTransference([FromBody] StartTransference request)
     {
         var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
@@ -31,7 +31,7 @@ public class TransferController(
         }
         return new OkObjectResult(transferenceId);
     }
-    [HttpPost("SendFileChunk")]
+    [HttpPost("sendFileChunk")]
     public async Task<ActionResult> SendFileChunk([FromBody] SendFileChunk request)
     {
         var success = await transferService.SendFileChunk(request);
@@ -42,7 +42,7 @@ public class TransferController(
         return new OkResult();
     }
     
-    [HttpGet("GetTransfer")]
+    [HttpGet("getTransfer")]
     public async Task<ActionResult> GetTransfer([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);
@@ -53,7 +53,7 @@ public class TransferController(
         return new OkObjectResult(transfer);
     }
     
-    [HttpGet("GetTransferChunks")]
+    [HttpGet("getTransferChunks")]
     public async Task<ActionResult> GetTransferChunks([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);
@@ -65,7 +65,7 @@ public class TransferController(
         return new OkObjectResult(chunks);
     }
     
-    [HttpGet("GetTransferChunks")]
+    [HttpGet("checkTransferChunksCompletion")]
     public async Task<ActionResult> CheckTransferChunksCompletion([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);

@@ -7,7 +7,7 @@ namespace SocketServer.Entities;
 public class Transference
 {
     [Key] 
-    public int IdTranference { get; set; }
+    public int IdTransference { get; set; }
     [ForeignKey("IdUser")]
     public User User { get; set; }
     public int IdUser { get; set; }
