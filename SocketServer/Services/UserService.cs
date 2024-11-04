@@ -113,9 +113,15 @@ public class UserService(AppDbContext context,
         return new OkObjectResult(new { message = "Usuário atualizado com sucesso" });
     }
     
-    public async Task<IActionResult> UpdatePassword(int idDevice, UpdatePassword request)
+    public async Task<IActionResult> UpdatePassword(UpdatePassword request)
     {
-        var user = deviceService.GetUserByDevice(idDevice);
+        var result = await verificationCodeService.ValidateVerificationCode(request.Email, request.Code);
+        if (!result)
+        {
+            return new BadRequestObjectResult(new {error = "Código inválido ou expirado"});;
+        }
+
+        var user = await GetUserByEmail(request.Email);
         
         if (user == null)
         {
@@ -130,7 +136,7 @@ public class UserService(AppDbContext context,
         await historyService.CreateHistory(
             EnActions.ChangedPassword,
             $"Senha do usuário {user.Username} alterada",
-            idDevice,
+            null,
             user.IdUser
         );
         

@@ -59,18 +59,5 @@ public class UserController(UserService userService, IHttpContextAccessor httpCo
         
         return await userService.UpdateUser((int.Parse(idClaim.Value)), request);
     }
-    
-    [HttpPut ("updatePassword")]
-    public async Task<IActionResult> UpdatePassword(UpdatePassword request)
-    {
-        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
-        
-        if (idClaim == null)
-        {
-            return new StatusCodeResult(500);
-        }
-        
-        return await userService.UpdatePassword((int.Parse(idClaim.Value)), request);
-    }
 }
 

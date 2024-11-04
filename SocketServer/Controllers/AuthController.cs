@@ -37,17 +37,17 @@ public class AuthController(AuthService authService, UserService userService, Em
         return new OkResult();
     }
     
-    [HttpPost]
+    [HttpGet]
     [Route("sendCode")]
-    public async Task<IActionResult> SendCode([FromBody] string email)
+    public async Task<IActionResult> SendCode([FromQuery] string email)
     {
         await userService.SendCode(email);
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
     
-    [HttpPost]
+    [HttpGet]
     [Route("sendCodeNewAccount")]
-    public async Task<IActionResult> sendCodeNewAccount([FromBody] string email)
+    public async Task<IActionResult> SendCodeNewAccount([FromQuery] string email)
     {
         var existingUser = await userService.GetUserByEmail(email);
         if (existingUser != null)
@@ -79,17 +79,10 @@ public class AuthController(AuthService authService, UserService userService, Em
         return await userService.Register(request);
     }
     
-    // [HttpPost]
-    // [Route("forgotPassword")]
-    // public async Task<IActionResult> ForgotPassword(UpdatePassword request)
-    // {
-    //     var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
-    //     
-    //     if (idClaim == null)
-    //     {
-    //         return new StatusCodeResult(500);
-    //     }
-    //     
-    //     return await userService.UpdatePassword((int.Parse(idClaim.Value)), request);
-    // }
+    [HttpPut]
+    [Route("updatePassword")]
+    public async Task<IActionResult> ForgotPassword([FromBody] UpdatePassword request)
+    {
+        return await userService.UpdatePassword(request);
+    }
 }

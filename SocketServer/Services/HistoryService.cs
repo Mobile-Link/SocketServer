@@ -18,16 +18,21 @@ public class HistoryService(AppDbContext context)
         return await context.Histories.FindAsync(deviceId);
     }
     
-    public async Task<History> CreateHistory(EnActions enAction, string description, int idDevice, int idUser)
+    public async Task<History> CreateHistory(EnActions enAction, string description, int? idDevice, int idUser)
     {
         var history = new History
         {
-            IdDevice = idDevice,
+           
             EnAction = enAction,
             Description = description,
             Date = DateTime.Now,
             IdUser = idUser
         };
+        
+        if(idDevice != null)
+        {
+            history.IdDevice = idDevice.Value;
+        }
         
         context.Histories.Add(history);
         await context.SaveChangesAsync();
