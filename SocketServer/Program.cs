@@ -18,6 +18,7 @@ builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddSingleton<ConnectionService>();
+builder.Services.AddSingleton<TransferenceMonitorService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<HistoryService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(

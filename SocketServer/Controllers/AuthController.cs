@@ -45,9 +45,9 @@ public class AuthController(AuthService authService, UserService userService, Em
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
     
-    [HttpPost]
+    [HttpGet]
     [Route("sendCodeNewAccount")]
-    public async Task<IActionResult> sendCodeNewAccount([FromBody] string email)
+    public async Task<IActionResult> sendCodeNewAccount([FromQuery] string email)
     {
         var existingUser = await userService.GetUserByEmail(email);
         if (existingUser != null)
