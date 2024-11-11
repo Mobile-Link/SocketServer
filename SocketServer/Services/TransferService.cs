@@ -85,6 +85,7 @@ public class TransferService(
             IdDeviceOrigin = idDeviceOrigin,
             IdDeviceDestination = deviceDestination.IdDevice,
             FilePath = request.FilePath,
+            FileNameExtension = request.FileNameExtension,
             Size = request.FileSize,
             DestinationPath = request.DestinationPath
         });
@@ -142,7 +143,7 @@ public class TransferService(
         var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTransference.ToString());
         var chunkPath = Path.Combine(directory, $"{request.StartByteIndex}.bin");
         Directory.CreateDirectory(directory);
-        await System.IO.File.WriteAllBytesAsync(chunkPath, request.ByteArray);
+        await File.WriteAllBytesAsync(chunkPath, request.ByteArray);
 
         if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
         {
@@ -190,7 +191,7 @@ public class TransferService(
     {
         return context.Transfers
             .Where((transference => transference.IdDeviceOrigin == idDeviceOrigin))
-            .Where((transference => transference.EnStatus == EnStatus.InProgress))
+            .Where((transference => transference.EnStatus == EnStatus.ReceivingStalled))
             .AsNoTracking()
             .ToList();
     }
@@ -203,16 +204,39 @@ public class TransferService(
             return;
         }
         
+        var unreceivedChunks = GetTransferChunks(idTransference)
+            .Where((_chunk) => _chunk.EnChunkStatus != EnChunkStatus.Received)
+            .ToList();
+        if (unreceivedChunks.Count == 0)
+        {
+            if (transfer.EnStatus == EnStatus.InProgress)
+            {
+                transfer.EnStatus = EnStatus.InCloud;
+                UpdateTransference(transfer).ContinueWith(_ => {});
+            }
+            return;
+        }
+        
+        transfer.EnStatus = EnStatus.ReceivingStalled;
+        UpdateTransference(transfer).ContinueWith(_ => {});
+        
         var connectionOrigin = connectionService.findDeviceConnection(transfer.IdUser, transfer.IdDeviceOrigin);
         if (connectionOrigin == null)
         {
             return;
         }
         
-        var chunks = GetTransferChunks(idTransference);
-        foreach (var chunk in chunks.Where((_chunk) => _chunk.EnChunkStatus != EnChunkStatus.Received))
+        foreach (var chunk in unreceivedChunks)
         {
             hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunk", chunk.IdTransferenceChunk);
         }
+    }
+
+    public TransferenceChunk? GetChunkWithTransference(int idChunk)
+    {
+        return context.TransferenceChunks
+            .AsNoTracking()
+            .Include(chunk => chunk.Transference)
+            .FirstOrDefault((chunk => chunk.IdTransferenceChunk == idChunk));
     }
 }

@@ -53,6 +53,17 @@ public class TransferController(
         return new OkObjectResult(transfer);
     }
     
+    [HttpGet("getChunkWithTransference")]
+    public ActionResult GetChunk([FromQuery] int idChunk)
+    {
+        var chunk = transferService.GetChunkWithTransference(idChunk);
+        if (chunk == null)
+        {
+            return StatusCode(404);
+        }
+        return new OkObjectResult(chunk);
+    }
+    
     [HttpGet("getChunkBytes")]
     public async Task<ActionResult> GetChunkBytes([FromQuery] int idChunk)
     {
@@ -65,9 +76,9 @@ public class TransferController(
         var bytes = await transferService.GetChunkBytes(chunk);
         if (bytes == null)
         {
-            return NotFound();//TODO emit to owner device requesting it to send the chunk
+            return NotFound();//TODO emit to owner device requesting it to send the chunk (Validate necessity)
         }
-        return new OkObjectResult(bytes);
+        return new OkObjectResult(new { Chunk = chunk, Bytes = bytes});
     }
     
     [HttpGet("getTransfersNotOnServer")]

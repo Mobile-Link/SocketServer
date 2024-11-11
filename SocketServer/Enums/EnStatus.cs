@@ -24,4 +24,7 @@ public enum EnStatus
     
     [Description("Canceled")]
     Canceled = 7,
+    
+    [Description("Receiving Stalled")]
+    ReceivingStalled = 8,
 }

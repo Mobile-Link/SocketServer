@@ -47,7 +47,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         var token = new DeviceToken
         {
             IdDevice = idDevice,
-            Token = GenerateCode.GenerateJwtToken(idDevice.ToString()), //TODO use IdDevice as claim
+            Token = GenerateCode.GenerateJwtToken(idDevice.ToString()),
             InsertionDate = DateTime.Now,
         };
         expirationDbContext.DeviceTokens.Add(token);
