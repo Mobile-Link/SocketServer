@@ -47,7 +47,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         var token = new DeviceToken
         {
             IdDevice = idDevice,
-            Token = GenerateCode.GenerateJwtToken(idDevice.ToString()), //TODO use IdDevice as claim
+            Token = GenerateCode.GenerateJwtToken(idDevice.ToString()),
             InsertionDate = DateTime.Now,
         };
         expirationDbContext.DeviceTokens.Add(token);
@@ -137,5 +137,26 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         );
         
         return new OkObjectResult(new {message = "Dispositivo atualizado com sucesso"});
+    }
+    
+    public async Task LastAccess(Device device)
+    {
+        var lastAccess = new AccessLog
+        {
+            IdDevice = device.IdDevice,
+            Date = DateTime.Now,
+            AccessLocation = "", //TODO pegar localização
+        };
+        
+        context.AccessLogs.Update(lastAccess);
+        await context.SaveChangesAsync();
+    }
+    
+    public AccessLog? GetLastAccess(int deviceId)
+    {
+        return context.AccessLogs
+            .AsNoTracking()
+            .OrderByDescending(accessLog => accessLog.Date)
+            .FirstOrDefault(accessLog => accessLog.IdDevice == deviceId);
     }
 }

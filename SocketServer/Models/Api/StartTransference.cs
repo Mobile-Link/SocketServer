@@ -8,6 +8,7 @@ public class StartTransference
     [Required] public long FileSize { get; set; }
 
     [Required] public string FilePath { get; set; }
+    [Required] public string FileNameExtension { get; set; }
 
     [Required] public string DestinationPath { get; set; }
 }

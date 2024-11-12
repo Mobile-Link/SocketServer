@@ -14,7 +14,7 @@ public class ConnectionController(
     ConnectionService connectionService, IHttpContextAccessor httpContextAccessor, DeviceService deviceService) : ControllerBase
 {
     [HttpGet("GetConnectedDevices")]
-    public ActionResult<List<int>> GetConnectedDevice()//TODO get from auth
+    public ActionResult<List<int>> GetConnectedDevice()
     {
         var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
         if (idClaim == null)

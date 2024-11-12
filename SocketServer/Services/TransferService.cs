@@ -12,56 +12,62 @@ public class TransferService(
     AppDbContext context,
     DeviceService deviceService,
     ConnectionService connectionService,
+    TransferenceMonitorService transferenceMonitorService,
     IHubContext<ConnectionHub> hubContext, 
     IConfiguration configuration)
 {
-    private readonly AppDbContext _context = context;
-
     public async Task<Transference> AddFileTransfer(Transference transference)
     {
-        _context.Transfers.Add(transference);
-        await _context.SaveChangesAsync();
+        context.Transfers.Add(transference);
+        await context.SaveChangesAsync();
 
         return transference;
     }
 
     private async Task<TransferenceChunk> AddTransferenceChunk(TransferenceChunk chunk)
     {
-        _context.TransferenceChunks.Add(chunk);
-        await _context.SaveChangesAsync();
+        context.TransferenceChunks.Add(chunk);
+        await context.SaveChangesAsync();
 
         return chunk;
     }
 
     private async Task UpdateTransferenceChunk(TransferenceChunk transferenceChunk)
     {
-        _context.TransferenceChunks.Update(transferenceChunk);
-        await _context.SaveChangesAsync();
+        context.TransferenceChunks.Update(transferenceChunk);
+        await context.SaveChangesAsync();
     }
     
     private async Task UpdateTransference(Transference transference)
     {
-        _context.Transfers.Update(transference);
-        await _context.SaveChangesAsync();
+        context.Transfers.Update(transference);
+        await context.SaveChangesAsync();
     }
 
     public Transference? GetTransfer(int idTransference)
     {
-        return _context.Transfers
+        return context.Transfers
             .AsNoTracking()
-            .FirstOrDefault((transference => transference.IdTranference == idTransference));
+            .FirstOrDefault((transference => transference.IdTransference == idTransference));
     }
     
     public List<TransferenceChunk> GetTransferChunks(int idTransference)
     {
-        return _context.TransferenceChunks
+        return context.TransferenceChunks
             .AsNoTracking()
             .Where((chunk => chunk.IdTransference == idTransference)).ToList();
+    }
+    
+    public TransferenceChunk? GetTransferChunk(int idChunk)
+    {
+        return context.TransferenceChunks
+            .AsNoTracking()
+            .FirstOrDefault((chunk => chunk.IdTransferenceChunk == idChunk));
     }
 
     public bool CheckAllChunksOnStatus(int idTransference, EnChunkStatus chunkStatus)
     {
-        return !_context.TransferenceChunks.Any((chunk) => chunk.IdTransference == idTransference && chunk.EnChunkStatus != chunkStatus);
+        return !context.TransferenceChunks.Any((chunk) => chunk.IdTransference == idTransference && chunk.EnChunkStatus != chunkStatus);
     }
     
     public async Task<int?> StartTransference(StartTransference request, int idDeviceOrigin)
@@ -79,11 +85,12 @@ public class TransferService(
             IdDeviceOrigin = idDeviceOrigin,
             IdDeviceDestination = deviceDestination.IdDevice,
             FilePath = request.FilePath,
+            FileNameExtension = request.FileNameExtension,
             Size = request.FileSize,
             DestinationPath = request.DestinationPath
         });
 
-        var transferId = transference.IdTranference;
+        var transferId = transference.IdTransference;
 
         var totalChunks = (int)Math.Ceiling((double)request.FileSize / (1024 * 1024));
         for (var index = 0; index < totalChunks; index++)
@@ -92,7 +99,7 @@ public class TransferService(
             {
                 IdTransference = transferId,
                 EnChunkStatus = EnChunkStatus.Pending,
-                startByteIndex = index * (1024 * 1024)
+                StartByteIndex = index * (1024 * 1024)
             });
         }
 
@@ -121,8 +128,8 @@ public class TransferService(
             return false;
         }
 
-        var transferenceChunk = await _context.TransferenceChunks.FirstOrDefaultAsync((chunk) =>
-            chunk.IdTransference == request.IdTransfer && chunk.startByteIndex ==
+        var transferenceChunk = await context.TransferenceChunks.FirstOrDefaultAsync((chunk) =>
+            chunk.IdTransference == request.IdTransfer && chunk.StartByteIndex ==
             request.StartByteIndex);
         if (transferenceChunk == null)
         {
@@ -133,29 +140,124 @@ public class TransferService(
         transferenceChunk.EnChunkStatus = EnChunkStatus.Received;
         await UpdateTransferenceChunk(transferenceChunk);
 
-        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTranference.ToString());
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transference.IdTransference.ToString());
         var chunkPath = Path.Combine(directory, $"{request.StartByteIndex}.bin");
         Directory.CreateDirectory(directory);
-        await System.IO.File.WriteAllBytesAsync(chunkPath, request.ByteArray);
+        await File.WriteAllBytesAsync(chunkPath, request.ByteArray);
 
+        if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
+        {
+            transferenceMonitorService.RemoveMonitor(transference.IdTransference);
+            transference.EnStatus = EnStatus.InCloud;
+            await UpdateTransference(transference);
+        }
+        else if(transference.EnStatus != EnStatus.InProgress)
+        {
+            transferenceMonitorService.ChunkReceived(transference.IdTransference, TimeoutTransference);
+            transference.EnStatus = EnStatus.InProgress;
+            await UpdateTransference(transference);
+        }
         
         var connectionDestination =
             connectionService.findDeviceConnection(user.IdUser, transference.IdDeviceDestination);
         if (connectionDestination == null)
         {
-            //TODO get when device connects
             return true;
         }
 
-        if (CheckAllChunksOnStatus(transference.IdTranference, EnChunkStatus.Received))
-        {
-            transference.EnStatus = EnStatus.InCloud;
-            await UpdateTransference(transference);
-        }
-        
         await hubContext.Clients.Client(connectionDestination).SendAsync("ReceiveFileChunk", request.IdTransfer,
             request.StartByteIndex, request.ByteArray);
         
+        return true;
+    }
+    
+    public async Task<byte[]?> GetChunkBytes(TransferenceChunk chunk)
+    {
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), chunk.IdTransference.ToString());
+        var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+        return await File.ReadAllBytesAsync(chunkPath);
+    }
+    
+    public List<Transference> GetTransfersNotOnDestination(int idDestination)
+    {
+        return context.Transfers
+            .Where((transference => transference.IdDeviceDestination == idDestination))
+            .Where((transference => transference.EnStatus == EnStatus.InCloud))
+            .AsNoTracking()
+            .ToList();
+    }
+    
+    public List<Transference> GetTransfersNotOnServer(int idDeviceOrigin)
+    {
+        return context.Transfers
+            .Where((transference => transference.IdDeviceOrigin == idDeviceOrigin))
+            .Where((transference => transference.EnStatus == EnStatus.ReceivingStalled))
+            .AsNoTracking()
+            .ToList();
+    }
+
+    private void TimeoutTransference(int idTransference)
+    {
+        var transfer = GetTransfer(idTransference);
+        if (transfer == null)
+        {
+            return;
+        }
+        
+        var unreceivedChunks = GetTransferChunks(idTransference)
+            .Where((_chunk) => _chunk.EnChunkStatus != EnChunkStatus.Received)
+            .ToList();
+        if (unreceivedChunks.Count == 0)
+        {
+            if (transfer.EnStatus == EnStatus.InProgress)
+            {
+                transfer.EnStatus = EnStatus.InCloud;
+                UpdateTransference(transfer).ContinueWith(_ => {});
+            }
+            return;
+        }
+        
+        transfer.EnStatus = EnStatus.ReceivingStalled;
+        UpdateTransference(transfer).ContinueWith(_ => {});
+        
+        var connectionOrigin = connectionService.findDeviceConnection(transfer.IdUser, transfer.IdDeviceOrigin);
+        if (connectionOrigin == null)
+        {
+            return;
+        }
+        
+        foreach (var chunk in unreceivedChunks)
+        {
+            hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunk", chunk.IdTransferenceChunk);
+        }
+    }
+
+    public TransferenceChunk? GetChunkWithTransference(int idChunk)
+    {
+        return context.TransferenceChunks
+            .AsNoTracking()
+            .Include(chunk => chunk.Transference)
+            .FirstOrDefault((chunk => chunk.IdTransferenceChunk == idChunk));
+    }
+
+    public async Task<bool> FinishTransfer(int idTransfer)
+    {
+        var transfer = GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return false;
+        }
+
+        var chunks = GetTransferChunks(idTransfer);
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
+        foreach (var chunk in chunks)
+        {
+            var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+            File.Delete(chunkPath);
+        }
+        Directory.Delete(directory);
+        transfer.EnStatus = EnStatus.Finished;
+        await UpdateTransference(transfer);
         return true;
     }
 }

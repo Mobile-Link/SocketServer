@@ -13,8 +13,8 @@ public enum EnStatus
     [Description("In cloud")]
     InCloud = 3,
     
-    [Description("Verifing")]
-    Verifing = 4,
+    [Description("Verifying")]
+    Verifying = 4,
     
     [Description("Finished")]
     Finished = 5,
@@ -24,4 +24,7 @@ public enum EnStatus
     
     [Description("Canceled")]
     Canceled = 7,
+    
+    [Description("Receiving Stalled")]
+    ReceivingStalled = 8,
 }

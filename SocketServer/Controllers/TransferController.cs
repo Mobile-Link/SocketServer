@@ -15,7 +15,7 @@ public class TransferController(
     TransferService transferService,
     IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
-    [HttpPost("StartTransference")]
+    [HttpPost("startTransference")]
     public async Task<ActionResult<int?>> StartTransference([FromBody] StartTransference request)
     {
         var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
@@ -31,7 +31,17 @@ public class TransferController(
         }
         return new OkObjectResult(transferenceId);
     }
-    [HttpPost("SendFileChunk")]
+    [HttpPost("finishTransfer")]
+    public async Task<ActionResult> FinishTransfer([FromBody] int idTransfer)
+    {
+        var success = await transferService.FinishTransfer(idTransfer);
+        if (!success)
+        {
+            return StatusCode(500);
+        }
+        return new OkResult();
+    }
+    [HttpPost("sendFileChunk")]
     public async Task<ActionResult> SendFileChunk([FromBody] SendFileChunk request)
     {
         var success = await transferService.SendFileChunk(request);
@@ -42,7 +52,7 @@ public class TransferController(
         return new OkResult();
     }
     
-    [HttpGet("GetTransfer")]
+    [HttpGet("getTransfer")]
     public async Task<ActionResult> GetTransfer([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);
@@ -53,7 +63,59 @@ public class TransferController(
         return new OkObjectResult(transfer);
     }
     
-    [HttpGet("GetTransferChunks")]
+    [HttpGet("getChunkWithTransference")]
+    public ActionResult GetChunk([FromQuery] int idChunk)
+    {
+        var chunk = transferService.GetChunkWithTransference(idChunk);
+        if (chunk == null)
+        {
+            return StatusCode(404);
+        }
+        return new OkObjectResult(chunk);
+    }
+    
+    [HttpGet("getChunkBytes")]
+    public async Task<ActionResult> GetChunkBytes([FromQuery] int idChunk)
+    {
+        var chunk = transferService.GetTransferChunk(idChunk);
+        if (chunk == null)
+        {
+            return BadRequest();
+        }
+
+        var bytes = await transferService.GetChunkBytes(chunk);
+        if (bytes == null)
+        {
+            return NotFound();//TODO emit to owner device requesting it to send the chunk (Validate necessity)
+        }
+        return new OkObjectResult(new { Chunk = chunk, Bytes = bytes});
+    }
+    
+    [HttpGet("getTransfersNotOnServer")]
+    public async Task<ActionResult> GetTransfersNotOnServer()
+    {
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var bytes = transferService.GetTransfersNotOnServer(int.Parse(idClaim.Value));
+        return new OkObjectResult(bytes);
+    }
+    
+    [HttpGet("getTransfersNotOnDestination")]
+    public async Task<ActionResult> GetTransfersNotOnDestination()
+    {
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var bytes = transferService.GetTransfersNotOnDestination(int.Parse(idClaim.Value));
+        return new OkObjectResult(bytes);
+    }
+    
+    [HttpGet("getTransferChunks")]
     public async Task<ActionResult> GetTransferChunks([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);
@@ -65,7 +127,7 @@ public class TransferController(
         return new OkObjectResult(chunks);
     }
     
-    [HttpGet("GetTransferChunks")]
+    [HttpGet("checkTransferChunksCompletion")]
     public async Task<ActionResult> CheckTransferChunksCompletion([FromQuery] int idTransfer)
     {
         var transfer = transferService.GetTransfer(idTransfer);

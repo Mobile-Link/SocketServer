@@ -36,6 +36,14 @@ public class CustomAuthorization(DeviceService deviceService) : AuthorizationHan
             context.Fail();
             return Task.CompletedTask;
         }
+
+        var device = deviceService.GetDeviceById(int.Parse(idDeviceClaim.Value));
+
+        if (device == null)
+        {
+            context.Fail();
+            return Task.CompletedTask;
+        }
         
         var tokenDb = deviceService.GetDeviceToken(int.Parse(idDeviceClaim.Value));
         
@@ -44,6 +52,8 @@ public class CustomAuthorization(DeviceService deviceService) : AuthorizationHan
             context.Fail();
             return Task.CompletedTask;
         }
+
+        deviceService.LastAccess(device).ContinueWith(_ => {});
         
         var identity = new ClaimsIdentity(new []
         {

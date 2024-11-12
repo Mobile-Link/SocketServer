@@ -39,14 +39,23 @@ public class AuthController(AuthService authService, UserService userService, Em
     
     [HttpPost]
     [Route("sendCode")]
-    public async Task<IActionResult> SendCode(string email)
+    public async Task<IActionResult> SendCode([FromBody] string email)
     {
-        var verificationCode = verificationCodeService.GenerateVerificationCode();
-        
-        await verificationCodeService.StoreVerificationCode(email, verificationCode);
-        
-        await emailService.SendVerificationEmailAsync(email, verificationCode);
+        await userService.SendCode(email);
+        return Ok(new { message = "Verifique seu email para ativar a sua conta" });
+    }
+    
+    [HttpGet]
+    [Route("sendCodeNewAccount")]
+    public async Task<IActionResult> sendCodeNewAccount([FromQuery] string email)
+    {
+        var existingUser = await userService.GetUserByEmail(email);
+        if (existingUser != null)
+        {
+            return BadRequest();
+        }
 
+        await userService.SendCode(email);
         return Ok(new { message = "Verifique seu email para ativar a sua conta" });
     }
 

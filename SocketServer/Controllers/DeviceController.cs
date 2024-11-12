@@ -57,8 +57,17 @@ public class DeviceController(DeviceService deviceService, IHttpContextAccessor 
         return new OkObjectResult(new {message = "Dispositivo deletado com sucesso"});
     }
     
-    // [HttpPost("DeleteDevice")]
-    // public async Task<IActionResult> DeleteDevice()
-    // {
-    // }
+    [HttpGet("lastAccess")]
+    public async Task<IActionResult> LastAccess(int idDevice)
+    {
+        var device = deviceService.GetDeviceById(idDevice);
+        if (device == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        
+        deviceService.GetLastAccess(device.IdDevice);
+        
+        return new OkObjectResult(new {message = "Acesso registrado"});
+    }
 }

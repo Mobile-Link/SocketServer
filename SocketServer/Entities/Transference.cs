@@ -7,7 +7,7 @@ namespace SocketServer.Entities;
 public class Transference
 {
     [Key] 
-    public int IdTranference { get; set; }
+    public int IdTransference { get; set; }
     [ForeignKey("IdUser")]
     public User User { get; set; }
     public int IdUser { get; set; }
@@ -19,6 +19,7 @@ public class Transference
     public Device DeviceDestination { get; set; }
     public int IdDeviceDestination { get; set; }
     public string FilePath { get; set; }
+    public string FileNameExtension { get; set; }
     public long Size { get; set; }
     public string DestinationPath { get; set; }
     [ForeignKey("EnStatus")]

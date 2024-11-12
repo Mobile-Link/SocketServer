@@ -18,6 +18,7 @@ builder.Services.AddScoped<TransferService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddSingleton<ConnectionService>();
+builder.Services.AddSingleton<TransferenceMonitorService>();
 builder.Services.AddScoped<DeviceService>();
 builder.Services.AddScoped<HistoryService>();
 builder.Services.AddScoped<EmailService>(sp => new EmailService(
@@ -79,7 +80,7 @@ app.UseReDoc(c =>
     c.RoutePrefix = "redoc";
     c.SpecUrl = "/swagger/v1/swagger.json";
 });
-//TODO add auth and get idDevice from token
+
 app.MapHub<ConnectionHub>("/connectionhub");
 
 app.MapControllers();

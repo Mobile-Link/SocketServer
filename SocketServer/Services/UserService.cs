@@ -8,7 +8,11 @@ using SocketServer.Enums;
 
 namespace SocketServer.Services;
 
-public class UserService(AppDbContext context, VerificationCodeService verificationCodeService, DeviceService deviceService, HistoryService historyService)
+public class UserService(AppDbContext context, 
+    VerificationCodeService verificationCodeService, 
+    DeviceService deviceService, 
+    HistoryService historyService,
+    EmailService emailService)
 {
     public async Task<IActionResult> Register(Register request)
     {
@@ -55,6 +59,15 @@ public class UserService(AppDbContext context, VerificationCodeService verificat
         var token = await deviceService.CreateDeviceToken(device.IdDevice);
 
         return new OkObjectResult( new { message = "Usuário cadastrado com sucesso", token.Token, device.IdDevice});
+    }
+
+    public async Task SendCode(string email)
+    {
+        var verificationCode = verificationCodeService.GenerateVerificationCode();
+        
+        await verificationCodeService.StoreVerificationCode(email, verificationCode);
+        
+        await emailService.SendVerificationEmailAsync(email, verificationCode);
     }
 
     public async Task<IActionResult> DeleteUser(int idDevice)

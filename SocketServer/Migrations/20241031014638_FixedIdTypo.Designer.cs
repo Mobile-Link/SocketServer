@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocketServer.Data;
 
@@ -10,9 +11,11 @@ using SocketServer.Data;
 namespace SocketServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241031014638_FixedIdTypo")]
+    partial class FixedIdTypo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -216,10 +219,6 @@ namespace SocketServer.Migrations
                     b.Property<int>("EnStatus")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FileNameExtension")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("FilePath")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -262,7 +261,7 @@ namespace SocketServer.Migrations
                     b.Property<int>("IdTransference")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("StartByteIndex")
+                    b.Property<long>("startByteIndex")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("IdTransferenceChunk");
