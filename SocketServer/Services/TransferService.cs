@@ -239,4 +239,25 @@ public class TransferService(
             .Include(chunk => chunk.Transference)
             .FirstOrDefault((chunk => chunk.IdTransferenceChunk == idChunk));
     }
+
+    public async Task<bool> FinishTransfer(int idTransfer)
+    {
+        var transfer = GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return false;
+        }
+
+        var chunks = GetTransferChunks(idTransfer);
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
+        foreach (var chunk in chunks)
+        {
+            var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+            File.Delete(chunkPath);
+        }
+        Directory.Delete(directory);
+        transfer.EnStatus = EnStatus.Finished;
+        await UpdateTransference(transfer);
+        return true;
+    }
 }

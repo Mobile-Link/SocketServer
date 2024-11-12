@@ -31,6 +31,16 @@ public class TransferController(
         }
         return new OkObjectResult(transferenceId);
     }
+    [HttpPost("finishTransfer")]
+    public async Task<ActionResult> FinishTransfer([FromBody] int idTransfer)
+    {
+        var success = await transferService.FinishTransfer(idTransfer);
+        if (!success)
+        {
+            return StatusCode(500);
+        }
+        return new OkResult();
+    }
     [HttpPost("sendFileChunk")]
     public async Task<ActionResult> SendFileChunk([FromBody] SendFileChunk request)
     {
