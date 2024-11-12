@@ -52,6 +52,8 @@ public class CustomAuthorization(DeviceService deviceService) : AuthorizationHan
             context.Fail();
             return Task.CompletedTask;
         }
+
+        deviceService.LastAccess(device).ContinueWith(_ => {});
         
         var identity = new ClaimsIdentity(new []
         {
