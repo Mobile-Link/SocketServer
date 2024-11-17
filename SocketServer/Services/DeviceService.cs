@@ -120,25 +120,10 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return new OkObjectResult(new {message = "Dispositivo deletado com sucesso"});
     }
     
-    public async Task<IActionResult> UpdateDevice(int deviceId)
+    public async Task UpdateDevice(Device device)
     {
-        var device = GetDeviceById(deviceId);
-        if (device == null)
-        {
-            return new NotFoundObjectResult(new {error = "Dispositivo não encontrado"});
-        }
-        
         context.Devices.Update(device);
         await context.SaveChangesAsync();
-        
-        await historyService.CreateHistory(
-            EnActions.ChangedDevice,
-            $"O nome do dispositivo foi modificado para {device.Name} ",
-            deviceId,
-            device.IdUser
-        );
-        
-        return new OkObjectResult(new {message = "Dispositivo atualizado com sucesso"});
     }
     
     public async Task LastAccess(Device device)
