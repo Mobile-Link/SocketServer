@@ -18,11 +18,21 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         {
             return new NotFoundObjectResult(new { error = "Usuário não encontrado" });
         }
-            
-
+        
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
+
+        var device = deviceService.GetDeviceById(loginRequest.IdDevice);
+
+        if (device == null)
+        {
+             return new NotFoundObjectResult(new { error = "Dispositivo não encontrado" });
+        }
+        
         var token = await deviceService.CreateDeviceToken(loginRequest.IdDevice);
+
+        deviceService.LastAccess(device).ContinueWith(_ => { });
+        
         return new OkObjectResult(new { token.Token });
     }
     

@@ -66,8 +66,8 @@ public class DeviceController(DeviceService deviceService, IHttpContextAccessor 
             return new StatusCodeResult(500);
         }
         
-        deviceService.GetLastAccess(device.IdDevice);
+        var access = deviceService.GetLastAccess(device.IdDevice);
         
-        return new OkObjectResult(new {message = "Acesso registrado"});
+        return new OkObjectResult(access);
     }
 }

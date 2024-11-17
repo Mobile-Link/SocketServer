@@ -11,6 +11,8 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
 {
     public async Task<Device> CreateDevice(User user, string deviceName)
     {
+        var dateAccess = DateTime.Now;
+        
         var device = new Device()
         {
             IdUser = user.IdUser,
@@ -19,9 +21,10 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             AvailableSpace = 0,
             OccupiedSpace = 0,
             Name = deviceName,
-            CreationDate = DateTime.Now,
-            AlterationDate = DateTime.Now,
+            CreationDate = dateAccess,
+            AlterationDate = dateAccess,
             EnDeviceOs = EnDeviceOs.Windows,
+            LastAccessDate = dateAccess
         };
         await context.Devices.AddAsync(device);
         await context.SaveChangesAsync();
@@ -38,7 +41,6 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     
      public async Task<DeviceToken> CreateDeviceToken(int idDevice)
     {
-
         var existingToken = GetDeviceToken(idDevice);
         if (existingToken != null)
         {
@@ -141,12 +143,20 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     
     public async Task LastAccess(Device device)
     {
+        var dateAccess = DateTime.Now;
+
+        device.LastAccessDate = dateAccess;
+        
         var lastAccess = new AccessLog
         {
+            IdUser = device.IdUser,
             IdDevice = device.IdDevice,
-            Date = DateTime.Now,
+            Date = dateAccess,
             AccessLocation = "", //TODO pegar localização
         };
+
+        context.Devices.Update(device);
+        await context.SaveChangesAsync();
         
         context.AccessLogs.Update(lastAccess);
         await context.SaveChangesAsync();
