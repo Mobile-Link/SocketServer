@@ -31,7 +31,7 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         
         var token = await deviceService.CreateDeviceToken(loginRequest.IdDevice);
 
-        deviceService.LastAccess(device).ContinueWith(_ => { });
+        deviceService.RegisterAccess(device).ContinueWith(_ => { });
         
         return new OkObjectResult(new { token.Token });
     }

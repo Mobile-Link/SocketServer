@@ -55,10 +55,10 @@ public class AuthController(AuthService authService, UserService userService, De
         {
             return new StatusCodeResult(410);
         }
-        //TODO register access
         device.AvailableSpace = request.AvailableSpace; 
         device.OccupiedSpace = request.OccupiedSpace;
-        await deviceService.UpdateDevice(device);
+        
+        deviceService.RegisterAccess(device).ContinueWith(_ => { });
         
         return new OkObjectResult(device);
     }

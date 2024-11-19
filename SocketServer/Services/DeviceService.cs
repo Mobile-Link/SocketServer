@@ -126,7 +126,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         await context.SaveChangesAsync();
     }
     
-    public async Task LastAccess(Device device)
+    public async Task RegisterAccess(Device device)
     {
         var dateAccess = DateTime.Now;
 
