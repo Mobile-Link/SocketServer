@@ -12,7 +12,7 @@ public class TransferService(
     AppDbContext context,
     DeviceService deviceService,
     ConnectionService connectionService,
-    TransferenceMonitorService transferenceMonitorService,
+    TransferenceTimerService transferenceTimerService,
     IHubContext<ConnectionHub> hubContext, 
     IConfiguration configuration)
 {
@@ -87,7 +87,8 @@ public class TransferService(
             FilePath = request.FilePath,
             FileNameExtension = request.FileNameExtension,
             Size = request.FileSize,
-            DestinationPath = request.DestinationPath
+            DestinationPath = request.DestinationPath,
+            EnStatus = EnStatus.NotStarted
         });
 
         var transferId = transference.IdTransference;
@@ -147,13 +148,13 @@ public class TransferService(
 
         if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
         {
-            transferenceMonitorService.RemoveMonitor(transference.IdTransference);
+            transferenceTimerService.RemoveMonitor(transference.IdTransference);//TODO monitor not working
             transference.EnStatus = EnStatus.InCloud;
             await UpdateTransference(transference);
         }
-        else if(transference.EnStatus != EnStatus.InProgress)
+        else
         {
-            transferenceMonitorService.ChunkReceived(transference.IdTransference, TimeoutTransference);
+            transferenceTimerService.ChunkReceived(transference.IdTransference, TimeoutTransference);
             transference.EnStatus = EnStatus.InProgress;
             await UpdateTransference(transference);
         }
@@ -196,7 +197,7 @@ public class TransferService(
             .ToList();
     }
 
-    private void TimeoutTransference(int idTransference)
+    private void TimeoutTransference(int idTransference)//TODO https://aistudio.google.com/prompts/19YmwZoS27GUY9GHmiOG0Ngoz7_lhNTmG
     {
         var transfer = GetTransfer(idTransference);
         if (transfer == null)

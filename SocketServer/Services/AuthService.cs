@@ -47,6 +47,7 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
+        //TODO validate if there is another device with the same name
         var device = await deviceService.CreateDevice(user, loginRequest.DeviceName);
         var token = await deviceService.CreateDeviceToken(device.IdDevice);
 
