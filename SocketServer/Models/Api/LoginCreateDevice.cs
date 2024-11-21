@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using SocketServer.Enums;
 
 namespace SocketServer.Models;
 
@@ -15,4 +16,6 @@ public class LoginCreateDevice
     
     [Required]
     public string Code { get; set; }
+    
+    public int PlatformOs { get; set; }
 }

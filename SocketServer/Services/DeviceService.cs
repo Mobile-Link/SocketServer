@@ -9,7 +9,7 @@ namespace SocketServer.Services;
 
 public class DeviceService(AppDbContext context, ExpirationDbContext expirationDbContext, HistoryService historyService)
 {
-    public async Task<Device> CreateDevice(User user, string deviceName)
+    public async Task<Device> CreateDevice(User user, string deviceName, EnDeviceOs osPlataform)
     {
         var dateAccess = DateTime.Now;
         
@@ -23,7 +23,7 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             Name = deviceName,
             CreationDate = dateAccess,
             AlterationDate = dateAccess,
-            EnDeviceOs = EnDeviceOs.Windows,
+            EnDeviceOs = osPlataform,
             LastAccessDate = dateAccess
         };
         await context.Devices.AddAsync(device);

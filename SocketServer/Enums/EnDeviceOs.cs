@@ -5,17 +5,20 @@ namespace SocketServer.Enums;
 public enum EnDeviceOs
 {
     [Description("Linux")]
-    Linux = 1,
+    Linux,
     
     [Description("Windows")]
-    Windows = 2,
+    Windows,
     
     [Description("Android")]
-    Android = 3,
+    Android,
     
     [Description("IOS")]
-    IOS = 4,
+    IOS,
     
     [Description("MacOS")]
-    MacOS = 5,
+    MacOS,
+    
+    [Description("Unknown")]
+    Unknown,
 }

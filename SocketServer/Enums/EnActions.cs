@@ -5,17 +5,17 @@ namespace SocketServer.Enums;
 public enum EnActions
 {
     [Description("Deleted device")]
-    DeletedDevice = 1,
+    DeletedDevice,
     
     [Description("Added device")]
-    AddedDevice = 2,
+    AddedDevice,
     
     [Description("Changed password")]
-    ChangedPassword = 3,
+    ChangedPassword,
     
     [Description("Changed device")]
-    ChangedDevice = 4,
+    ChangedDevice,
     
     [Description("Changed user")]
-    ChangedUser = 5,
+    ChangedUser
 }
