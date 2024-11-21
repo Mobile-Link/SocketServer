@@ -148,13 +148,13 @@ public class TransferService(
 
         if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
         {
-            transferenceTimerService.RemoveMonitor(transference.IdTransference);//TODO monitor not working
+            transferenceTimerService.RemoveMonitor(transference.IdTransference);
             transference.EnStatus = EnStatus.InCloud;
             await UpdateTransference(transference);
         }
         else
         {
-            transferenceTimerService.ChunkReceived(transference.IdTransference, TimeoutTransference);
+            transferenceTimerService.ChunkReceived(transference.IdTransference);
             transference.EnStatus = EnStatus.InProgress;
             await UpdateTransference(transference);
         }
@@ -197,18 +197,15 @@ public class TransferService(
             .ToList();
     }
 
-    private void TimeoutTransference(int idTransference)//TODO https://aistudio.google.com/prompts/19YmwZoS27GUY9GHmiOG0Ngoz7_lhNTmG
+    public void TimeoutTransference(int idTransference)
     {
         var transfer = GetTransfer(idTransference);
         if (transfer == null)
         {
             return;
         }
-        
-        var unreceivedChunks = GetTransferChunks(idTransference)
-            .Where((_chunk) => _chunk.EnChunkStatus != EnChunkStatus.Received)
-            .ToList();
-        if (unreceivedChunks.Count == 0)
+
+        if (CheckAllChunksOnStatus(transfer.IdTransference, EnChunkStatus.Received))
         {
             if (transfer.EnStatus == EnStatus.InProgress)
             {
@@ -226,11 +223,7 @@ public class TransferService(
         {
             return;
         }
-        
-        foreach (var chunk in unreceivedChunks)
-        {
-            hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunk", chunk.IdTransferenceChunk);
-        }
+        hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunks", transfer.IdTransference);
     }
 
     public TransferenceChunk? GetChunkWithTransference(int idChunk)

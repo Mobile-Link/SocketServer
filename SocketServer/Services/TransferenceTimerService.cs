@@ -2,33 +2,37 @@ using System.Timers;
 
 namespace SocketServer.Services;
 
-public class TransferenceTimerService(IConfiguration configuration)
+public class TransferenceTimerService(IConfiguration configuration, IServiceProvider serviceProvider)
 {
     private readonly Dictionary<int, System.Timers.Timer?> _lastChunkReceivedByTransaction = new Dictionary<int, System.Timers.Timer?>();
-    private Action<int>? _timeoutFunction;
-    public void ChunkReceived(int idTransference, Action<int>? timeoutFunction = null)
+    public void ChunkReceived(int idTransference)
     {
-        if (timeoutFunction != null && _timeoutFunction == null)
+        if (_lastChunkReceivedByTransaction.ContainsKey(idTransference))
         {
-            _timeoutFunction = timeoutFunction;
+            _lastChunkReceivedByTransaction[idTransference]?.Stop();
+            _lastChunkReceivedByTransaction[idTransference]?.Dispose();
         }
 
-        if (!_lastChunkReceivedByTransaction.ContainsKey(idTransference))
+        var minutes = int.Parse(configuration["TransferenceChunkTimeoutMinutes"] ?? "30"); 
+        var timer = new System.Timers.Timer(new TimeSpan(0, minutes, 0));
+        timer.AutoReset = false;
+        timer.Elapsed += (object? o, ElapsedEventArgs e) =>
         {
-            var minutes = int.Parse(configuration["TransferenceChunkTimeoutMinutes"] ?? "30"); 
-            _lastChunkReceivedByTransaction[idTransference] = new System.Timers.Timer(new TimeSpan(0, minutes, 0));    
-            _lastChunkReceivedByTransaction[idTransference].Elapsed += (object? o, ElapsedEventArgs e) =>
+            using (var scope = serviceProvider.CreateScope())
             {
-                _timeoutFunction?.Invoke(idTransference);
-            };
-        }
-        _lastChunkReceivedByTransaction[idTransference]?.Stop();
-        _lastChunkReceivedByTransaction[idTransference]?.Start();
+                var transferService = scope.ServiceProvider.GetRequiredService<TransferService>();
+                transferService.TimeoutTransference(idTransference);
+                RemoveMonitor(idTransference);
+            }
+        };
+        timer.Start();
+        _lastChunkReceivedByTransaction[idTransference] = timer;
     }
 
     public void RemoveMonitor(int idTransference)
     {
         _lastChunkReceivedByTransaction[idTransference]?.Stop();
+        _lastChunkReceivedByTransaction[idTransference]?.Dispose();
         _lastChunkReceivedByTransaction.Remove(idTransference);
     }
 }
