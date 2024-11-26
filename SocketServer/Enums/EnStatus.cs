@@ -5,26 +5,26 @@ namespace SocketServer.Enums;
 public enum EnStatus
 {
     [Description("Not started")]
-    NotStarted = 1,
+    NotStarted,
     
     [Description("In progress")]
-    InProgress = 2,
+    InProgress,
     
     [Description("In cloud")]
-    InCloud = 3,
+    InCloud,
     
     [Description("Verifying")]
-    Verifying = 4,
+    Verifying,
     
     [Description("Finished")]
-    Finished = 5,
+    Finished,
     
     [Description("Error")]
-    Error = 6,
+    Error,
     
     [Description("Canceled")]
-    Canceled = 7,
+    Canceled,
     
     [Description("Receiving Stalled")]
-    ReceivingStalled = 8,
+    ReceivingStalled,
 }

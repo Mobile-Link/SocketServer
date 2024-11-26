@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SocketServer.Entities;
 using SocketServer.Models;
 using SocketServer.Services;
 
@@ -8,7 +9,7 @@ namespace SocketServer.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 
-public class AuthController(AuthService authService, UserService userService, EmailService emailService, VerificationCodeService verificationCodeService, IHttpContextAccessor httpContextAccessor) : ControllerBase
+public class AuthController(AuthService authService, UserService userService, DeviceService deviceService, VerificationCodeService verificationCodeService, IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
     [HttpPost]
     [Route("login")]
@@ -29,12 +30,37 @@ public class AuthController(AuthService authService, UserService userService, Em
         return await authService.ValidateCredentials(request.EmailOrUsername, request.Password);
     }
     
-    [HttpGet]
-    [Route("verifyToken")]
+    [HttpPost]
+    [Route("updateDeviceInformation")]
     [Authorize(Policy = "Authorized")]
-    public IActionResult VerifyToken()
+    public async Task<IActionResult> UpdateDeviceInformation([FromBody] UpdateDeviceInformation request)
     {
-        return new OkResult();
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        //TODO check if user was deleted
+        if (request.IdDevice != int.Parse(idClaim.Value))
+        {
+            return new StatusCodeResult(406);
+        }
+        var device = deviceService.GetDeviceById(int.Parse(idClaim.Value));
+        if (device == null)
+        {
+            return new StatusCodeResult(404);
+        }
+
+        if (device.IsDeleted)
+        {
+            return new StatusCodeResult(410);
+        }
+        device.AvailableSpace = request.AvailableSpace; 
+        device.OccupiedSpace = request.OccupiedSpace;
+        
+        deviceService.RegisterAccess(device).ContinueWith(_ => { });
+        
+        return new OkObjectResult(device);
     }
     
     [HttpPost]

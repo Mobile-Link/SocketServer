@@ -5,6 +5,7 @@ using SocketServer.Data;
 using SocketServer.Models;
 using SocketServer.Entities;
 using SocketServer.Enums;
+using SocketServer.Infra;
 
 namespace SocketServer.Services;
 
@@ -52,7 +53,7 @@ public class UserService(AppDbContext context,
         context.Users.Add(user);
         await context.SaveChangesAsync();
         
-        var device = await deviceService.CreateDevice(user, request.DeviceName);
+        var device = await deviceService.CreateDevice(user, request.DeviceName, (EnDeviceOs)request.PlatformOs);
         
         await verificationCodeService.DeleteVerificationCode(request.Email);
         

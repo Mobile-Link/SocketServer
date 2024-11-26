@@ -9,8 +9,10 @@ namespace SocketServer.Services;
 
 public class DeviceService(AppDbContext context, ExpirationDbContext expirationDbContext, HistoryService historyService)
 {
-    public async Task<Device> CreateDevice(User user, string deviceName)
+    public async Task<Device> CreateDevice(User user, string deviceName, EnDeviceOs osPlataform)
     {
+        var dateAccess = DateTime.Now;
+        
         var device = new Device()
         {
             IdUser = user.IdUser,
@@ -19,9 +21,10 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
             AvailableSpace = 0,
             OccupiedSpace = 0,
             Name = deviceName,
-            CreationDate = DateTime.Now,
-            AlterationDate = DateTime.Now,
-            EnDeviceOs = EnDeviceOs.Windows,
+            CreationDate = dateAccess,
+            AlterationDate = dateAccess,
+            EnDeviceOs = osPlataform,
+            LastAccessDate = dateAccess
         };
         await context.Devices.AddAsync(device);
         await context.SaveChangesAsync();
@@ -38,7 +41,6 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
     
      public async Task<DeviceToken> CreateDeviceToken(int idDevice)
     {
-
         var existingToken = GetDeviceToken(idDevice);
         if (existingToken != null)
         {
@@ -118,35 +120,28 @@ public class DeviceService(AppDbContext context, ExpirationDbContext expirationD
         return new OkObjectResult(new {message = "Dispositivo deletado com sucesso"});
     }
     
-    public async Task<IActionResult> UpdateDevice(int deviceId)
+    public async Task UpdateDevice(Device device)
     {
-        var device = GetDeviceById(deviceId);
-        if (device == null)
-        {
-            return new NotFoundObjectResult(new {error = "Dispositivo não encontrado"});
-        }
-        
         context.Devices.Update(device);
         await context.SaveChangesAsync();
-        
-        await historyService.CreateHistory(
-            EnActions.ChangedDevice,
-            $"O nome do dispositivo foi modificado para {device.Name} ",
-            deviceId,
-            device.IdUser
-        );
-        
-        return new OkObjectResult(new {message = "Dispositivo atualizado com sucesso"});
     }
     
-    public async Task LastAccess(Device device)
+    public async Task RegisterAccess(Device device)
     {
+        var dateAccess = DateTime.Now;
+
+        device.LastAccessDate = dateAccess;
+        
         var lastAccess = new AccessLog
         {
+            IdUser = device.IdUser,
             IdDevice = device.IdDevice,
-            Date = DateTime.Now,
+            Date = dateAccess,
             AccessLocation = "", //TODO pegar localização
         };
+
+        context.Devices.Update(device);
+        await context.SaveChangesAsync();
         
         context.AccessLogs.Update(lastAccess);
         await context.SaveChangesAsync();

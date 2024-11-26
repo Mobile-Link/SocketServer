@@ -18,4 +18,6 @@ public class Register
     
     [Required]
     public string DeviceName { get; set; }
+    
+    public int PlatformOs { get; set; }
 }

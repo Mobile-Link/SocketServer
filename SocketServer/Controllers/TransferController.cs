@@ -31,8 +31,18 @@ public class TransferController(
         }
         return new OkObjectResult(transferenceId);
     }
+    [HttpPost("failTransfer")]
+    public async Task<ActionResult> FailTransfer([FromQuery] int idTransfer)
+    {
+        var success = await transferService.FailTransfer(idTransfer);
+        if (!success)
+        {
+            return StatusCode(500);
+        }
+        return new OkResult();
+    }
     [HttpPost("finishTransfer")]
-    public async Task<ActionResult> FinishTransfer([FromBody] int idTransfer)
+    public async Task<ActionResult> FinishTransfer([FromQuery] int idTransfer)
     {
         var success = await transferService.FinishTransfer(idTransfer);
         if (!success)

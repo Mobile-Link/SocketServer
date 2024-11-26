@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using SocketServer.Entities;
+using SocketServer.Enums;
 using SocketServer.Infra;
 using SocketServer.Models;
 
@@ -18,11 +19,21 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         {
             return new NotFoundObjectResult(new { error = "Usuário não encontrado" });
         }
-            
-
+        
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
+
+        var device = deviceService.GetDeviceById(loginRequest.IdDevice);
+
+        if (device == null)
+        {
+             return new NotFoundObjectResult(new { error = "Dispositivo não encontrado" });
+        }
+        
         var token = await deviceService.CreateDeviceToken(loginRequest.IdDevice);
+
+        deviceService.RegisterAccess(device).ContinueWith(_ => { });
+        
         return new OkObjectResult(new { token.Token });
     }
     
@@ -37,7 +48,8 @@ public class AuthService(UserService userService, DeviceService deviceService, V
         
         if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             return new UnauthorizedObjectResult(new { error = "Credenciais inválidas" });
-        var device = await deviceService.CreateDevice(user, loginRequest.DeviceName);
+        //TODO validate if there is another device with the same name
+        var device = await deviceService.CreateDevice(user, loginRequest.DeviceName, (EnDeviceOs)loginRequest.PlatformOs);
         var token = await deviceService.CreateDeviceToken(device.IdDevice);
 
         return new OkObjectResult(new { token.Token, device.IdDevice });

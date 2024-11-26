@@ -12,7 +12,7 @@ public class TransferService(
     AppDbContext context,
     DeviceService deviceService,
     ConnectionService connectionService,
-    TransferenceMonitorService transferenceMonitorService,
+    TransferenceTimerService transferenceTimerService,
     IHubContext<ConnectionHub> hubContext, 
     IConfiguration configuration)
 {
@@ -87,7 +87,8 @@ public class TransferService(
             FilePath = request.FilePath,
             FileNameExtension = request.FileNameExtension,
             Size = request.FileSize,
-            DestinationPath = request.DestinationPath
+            DestinationPath = request.DestinationPath,
+            EnStatus = EnStatus.NotStarted
         });
 
         var transferId = transference.IdTransference;
@@ -147,13 +148,13 @@ public class TransferService(
 
         if (CheckAllChunksOnStatus(transference.IdTransference, EnChunkStatus.Received))
         {
-            transferenceMonitorService.RemoveMonitor(transference.IdTransference);
+            transferenceTimerService.RemoveMonitor(transference.IdTransference);
             transference.EnStatus = EnStatus.InCloud;
             await UpdateTransference(transference);
         }
-        else if(transference.EnStatus != EnStatus.InProgress)
+        else
         {
-            transferenceMonitorService.ChunkReceived(transference.IdTransference, TimeoutTransference);
+            transferenceTimerService.ChunkReceived(transference.IdTransference);
             transference.EnStatus = EnStatus.InProgress;
             await UpdateTransference(transference);
         }
@@ -182,7 +183,7 @@ public class TransferService(
     {
         return context.Transfers
             .Where((transference => transference.IdDeviceDestination == idDestination))
-            .Where((transference => transference.EnStatus == EnStatus.InCloud))
+            .Where((transference => new [] { EnStatus.InCloud, EnStatus.InProgress }.Contains(transference.EnStatus)))
             .AsNoTracking()
             .ToList();
     }
@@ -196,18 +197,15 @@ public class TransferService(
             .ToList();
     }
 
-    private void TimeoutTransference(int idTransference)
+    public void TimeoutTransference(int idTransference)
     {
         var transfer = GetTransfer(idTransference);
         if (transfer == null)
         {
             return;
         }
-        
-        var unreceivedChunks = GetTransferChunks(idTransference)
-            .Where((_chunk) => _chunk.EnChunkStatus != EnChunkStatus.Received)
-            .ToList();
-        if (unreceivedChunks.Count == 0)
+
+        if (CheckAllChunksOnStatus(transfer.IdTransference, EnChunkStatus.Received))
         {
             if (transfer.EnStatus == EnStatus.InProgress)
             {
@@ -225,11 +223,7 @@ public class TransferService(
         {
             return;
         }
-        
-        foreach (var chunk in unreceivedChunks)
-        {
-            hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunk", chunk.IdTransferenceChunk);
-        }
+        hubContext.Clients.Client(connectionOrigin).SendAsync("ReSendChunks", transfer.IdTransference);
     }
 
     public TransferenceChunk? GetChunkWithTransference(int idChunk)
@@ -249,15 +243,58 @@ public class TransferService(
         }
 
         var chunks = GetTransferChunks(idTransfer);
+        
+        if (chunks.Any((chunk => chunk.EnChunkStatus != EnChunkStatus.Received)))
+        {
+            return false;
+        }
+        
         var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
         foreach (var chunk in chunks)
         {
-            var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
-            File.Delete(chunkPath);
+            try
+            {
+                var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+                File.Delete(chunkPath);
+            }
+            catch (FileNotFoundException)
+            {
+                continue;
+            }
         }
         Directory.Delete(directory);
         transfer.EnStatus = EnStatus.Finished;
         await UpdateTransference(transfer);
+        return true;
+    }
+
+    public async Task<bool> FailTransfer(int idTransfer)
+    {
+        var transfer = GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return false;
+        }
+
+        var chunks = GetTransferChunks(idTransfer);
+        
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
+        foreach (var chunk in chunks)
+        {
+            try
+            {
+                var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+                File.Delete(chunkPath);
+            }
+            catch (FileNotFoundException)
+            {
+                
+            }
+        }
+        Directory.Delete(directory);
+        transfer.EnStatus = EnStatus.Error;
+        await UpdateTransference(transfer);
+        //TODO delete chunks from database?
         return true;
     }
 }
