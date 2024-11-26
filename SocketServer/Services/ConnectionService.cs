@@ -42,12 +42,18 @@ public class ConnectionService
         var item = new Tuple<int, string>(idDevice, connectionId);
         if (_connectedDevices.TryGetValue(idUser, out List<Tuple<int, string>>? value))
         {
+            var index = value.FindIndex((tuple => tuple.Item1 == idDevice));
+            if (index != -1)
+            {
+                _connectedDevices[idUser][index] = item;
+                return;
+            }
+
             value.Add(item);
+            return;
         }
-        else
-        {
-            _connectedDevices[idUser] = [item];
-        }
+        
+        _connectedDevices[idUser] = [item];
     }
     public void Remove(int idUser, string connectionId)
     {

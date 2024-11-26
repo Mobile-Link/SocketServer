@@ -31,8 +31,16 @@ public class TransferenceTimerService(IConfiguration configuration, IServiceProv
 
     public void RemoveMonitor(int idTransference)
     {
-        _lastChunkReceivedByTransaction[idTransference]?.Stop();
-        _lastChunkReceivedByTransaction[idTransference]?.Dispose();
-        _lastChunkReceivedByTransaction.Remove(idTransference);
+        if (_lastChunkReceivedByTransaction.TryGetValue(idTransference, out var timer))
+        {
+            timer?.Stop();
+            timer?.Dispose();
+
+            _lastChunkReceivedByTransaction.Remove(idTransference);
+        }
+        else
+        {
+            Console.WriteLine($"Chave {idTransference} não encontrada no dicionário.");
+        }
     }
 }

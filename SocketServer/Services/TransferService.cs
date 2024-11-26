@@ -183,7 +183,7 @@ public class TransferService(
     {
         return context.Transfers
             .Where((transference => transference.IdDeviceDestination == idDestination))
-            .Where((transference => transference.EnStatus == EnStatus.InCloud))
+            .Where((transference => new [] { EnStatus.InCloud, EnStatus.InProgress }.Contains(transference.EnStatus)))
             .AsNoTracking()
             .ToList();
     }
@@ -243,15 +243,58 @@ public class TransferService(
         }
 
         var chunks = GetTransferChunks(idTransfer);
+        
+        if (chunks.Any((chunk => chunk.EnChunkStatus != EnChunkStatus.Received)))
+        {
+            return false;
+        }
+        
         var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
         foreach (var chunk in chunks)
         {
-            var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
-            File.Delete(chunkPath);
+            try
+            {
+                var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+                File.Delete(chunkPath);
+            }
+            catch (FileNotFoundException)
+            {
+                continue;
+            }
         }
         Directory.Delete(directory);
         transfer.EnStatus = EnStatus.Finished;
         await UpdateTransference(transfer);
+        return true;
+    }
+
+    public async Task<bool> FailTransfer(int idTransfer)
+    {
+        var transfer = GetTransfer(idTransfer);
+        if (transfer == null)
+        {
+            return false;
+        }
+
+        var chunks = GetTransferChunks(idTransfer);
+        
+        var directory = Path.Combine(configuration["ChunkUploadPath"] ?? Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), transfer.IdTransference.ToString());
+        foreach (var chunk in chunks)
+        {
+            try
+            {
+                var chunkPath = Path.Combine(directory, $"{chunk.StartByteIndex}.bin");
+                File.Delete(chunkPath);
+            }
+            catch (FileNotFoundException)
+            {
+                
+            }
+        }
+        Directory.Delete(directory);
+        transfer.EnStatus = EnStatus.Error;
+        await UpdateTransference(transfer);
+        //TODO delete chunks from database?
         return true;
     }
 }
