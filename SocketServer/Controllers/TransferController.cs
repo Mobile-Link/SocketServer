@@ -13,6 +13,7 @@ namespace SocketServer.Controllers;
 [Authorize(Policy = "Authorized")]
 public class TransferController(
     TransferService transferService,
+    DeviceService deviceService,
     IHttpContextAccessor httpContextAccessor) : ControllerBase
 {
     [HttpPost("startTransference")]
@@ -70,6 +71,23 @@ public class TransferController(
         {
             return StatusCode(404);
         }
+        return new OkObjectResult(transfer);
+    }
+    
+    [HttpGet("getTransfers")]
+    public async Task<ActionResult> GetTransfers()
+    {
+        var idClaim = httpContextAccessor.HttpContext.User.FindFirst("IdDevice");
+        if (idClaim == null)
+        {
+            return new StatusCodeResult(500);
+        }
+        var user = deviceService.GetUserByDevice(int.Parse(idClaim.Value));
+        if (user == null)
+        {
+            return new NotFoundResult();
+        }
+        var transfer = transferService.GetTransfers(user.IdUser);
         return new OkObjectResult(transfer);
     }
     

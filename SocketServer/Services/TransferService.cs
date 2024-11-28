@@ -51,6 +51,15 @@ public class TransferService(
             .FirstOrDefault((transference => transference.IdTransference == idTransference));
     }
     
+    public List<Transference> GetTransfers(int idUser)
+    {
+        return context.Transfers
+            .AsNoTracking()
+            .Where((transference => transference.IdUser == idUser))
+            .OrderByDescending((transference => transference.IdTransference))
+            .ToList();
+    }
+    
     public List<TransferenceChunk> GetTransferChunks(int idTransference)
     {
         return context.TransferenceChunks
@@ -88,7 +97,9 @@ public class TransferService(
             FileNameExtension = request.FileNameExtension,
             Size = request.FileSize,
             DestinationPath = request.DestinationPath,
-            EnStatus = EnStatus.NotStarted
+            EnStatus = EnStatus.NotStarted,
+            UpdateDate = new DateTime(),
+            CreationDate = new DateTime()
         });
 
         var transferId = transference.IdTransference;
@@ -150,12 +161,14 @@ public class TransferService(
         {
             transferenceTimerService.RemoveMonitor(transference.IdTransference);
             transference.EnStatus = EnStatus.InCloud;
+            transference.UpdateDate = DateTime.Now;
             await UpdateTransference(transference);
         }
         else
         {
             transferenceTimerService.ChunkReceived(transference.IdTransference);
             transference.EnStatus = EnStatus.InProgress;
+            transference.UpdateDate = DateTime.Now;
             await UpdateTransference(transference);
         }
         
@@ -210,12 +223,14 @@ public class TransferService(
             if (transfer.EnStatus == EnStatus.InProgress)
             {
                 transfer.EnStatus = EnStatus.InCloud;
+                transfer.UpdateDate = DateTime.Now;
                 UpdateTransference(transfer).ContinueWith(_ => {});
             }
             return;
         }
         
         transfer.EnStatus = EnStatus.ReceivingStalled;
+        transfer.UpdateDate = DateTime.Now;
         UpdateTransference(transfer).ContinueWith(_ => {});
         
         var connectionOrigin = connectionService.findDeviceConnection(transfer.IdUser, transfer.IdDeviceOrigin);
@@ -264,6 +279,7 @@ public class TransferService(
         }
         Directory.Delete(directory);
         transfer.EnStatus = EnStatus.Finished;
+        transfer.UpdateDate = DateTime.Now;
         await UpdateTransference(transfer);
         return true;
     }
@@ -293,6 +309,7 @@ public class TransferService(
         }
         Directory.Delete(directory);
         transfer.EnStatus = EnStatus.Error;
+        transfer.UpdateDate = DateTime.Now;
         await UpdateTransference(transfer);
         //TODO delete chunks from database?
         return true;
