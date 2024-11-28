@@ -18,6 +18,11 @@ public class VerificationCodeService(ExpirationDbContext context, IConfiguration
 
     public async Task StoreVerificationCode(string email, string code)
     {
+        var existsCode = await GetVerificationCode(email);
+        if (existsCode != null)
+        {
+            await DeleteVerificationCode(email);
+        }
         var verificationCode = new VerificationCode()
         {
             Email = email,
